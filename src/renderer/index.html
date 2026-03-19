@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: file:; media-src 'self' file:; script-src 'self';">
+    <title>Cocos Resource Scanner</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/tree.css">
+</head>
+<body>
+    <!-- Landing / Folder Picker -->
+    <div id="folder-picker" class="screen active">
+        <div class="picker-content">
+            <div class="picker-icon">📂</div>
+            <h1>Cocos Resource Scanner</h1>
+            <p class="picker-desc">Scan your Cocos2d-JS project to find unused resources</p>
+            <button id="btn-select-folder" class="btn-primary">Select Project Folder</button>
+            <p class="picker-hint">Folder must contain <code>res/</code> and <code>src/</code> directories</p>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="main-app" class="screen">
+        <!-- Top Bar -->
+        <div id="topbar">
+            <div class="topbar-left">
+                <button id="btn-change-folder" class="btn-icon" title="Change folder">📂</button>
+                <span id="project-path" class="project-path"></span>
+            </div>
+            <div class="topbar-center" id="filter-bar"></div>
+            <div class="topbar-right">
+                <button id="btn-rescan" class="btn-icon" title="Rescan">🔄</button>
+                <button id="btn-export" class="btn-icon" title="Export report">📥</button>
+            </div>
+        </div>
+
+        <!-- Content Area -->
+        <div id="content">
+            <!-- Left: Tree View -->
+            <div id="panel-tree" class="panel">
+                <div id="tree-container"></div>
+            </div>
+            <!-- Resizer -->
+            <div class="panel-resizer" data-resize="tree"></div>
+            <!-- Right: Preview + References -->
+            <div id="panel-detail" class="panel">
+                <div id="preview-panel">
+                    <div class="panel-header">Preview</div>
+                    <div id="preview-content" class="panel-body">
+                        <div class="empty-state">Select a file to preview</div>
+                    </div>
+                </div>
+                <div class="panel-resizer-h" data-resize="preview"></div>
+                <div id="reference-panel">
+                    <div class="panel-header">References</div>
+                    <div id="reference-content" class="panel-body">
+                        <div class="empty-state">Select a file to see references</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div id="statusbar">
+            <span id="status-text">Ready</span>
+            <span id="status-stats"></span>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

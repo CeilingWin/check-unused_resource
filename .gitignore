@@ -1,0 +1,17 @@
+node_modules/
+examples/
+dist/
+coverage/
+*.log
+*.tsbuildinfo
+.DS_Store
+.idea/
+.vscode/
+*.env
+*.local
+*.cache
+*.tmp
+*.bak
+*.swp
+*.swo
+*.zip

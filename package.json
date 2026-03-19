@@ -1,0 +1,24 @@
+{
+  "name": "cocos-resource-scanner",
+  "version": "1.0.0",
+  "description": "Scan and detect unused resources in Cocos2d-JS game projects",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.0.0"
+  },
+  "build": {
+    "appId": "com.tools.cocos-resource-scanner",
+    "productName": "Cocos Resource Scanner",
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "assets/**/*"
+    ]
+  }
+}
