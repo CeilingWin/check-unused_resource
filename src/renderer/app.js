@@ -441,22 +441,74 @@ function showReferences(resource) {
         const badge = ref.type === 'json' ? 'json' : ref.type === 'plist' ? 'plist' : 'js';
         const badgeLabel = ref.type === 'json' ? 'JSON' : ref.type === 'plist' ? 'PLIST' : 'JS';
 
+        let codeBlockHtml;
+        if (ref.context && ref.context.length > 0) {
+            // Multi-line context with line numbers
+            const codeLines = ref.context.map(entry => {
+                const lineNumStr = entry.lineNum != null
+                    ? String(entry.lineNum).padStart(4)
+                    : '    ';
+                const highlighted = entry.highlight ? ' code-highlight' : '';
+                const gap = entry.lineNum == null ? ' code-gap' : '';
+                const escapedText = escapeHtml(entry.text);
+                const syntaxText = highlightSyntax(escapedText);
+                return `<div class="code-line${highlighted}${gap}"><span class="code-linenum">${lineNumStr}</span><span class="code-text">${syntaxText}</span></div>`;
+            }).join('');
+            codeBlockHtml = codeLines;
+        } else {
+            // Fallback: single-line snippet
+            const escapedSnippet = escapeHtml(ref.snippet);
+            const syntaxSnippet = highlightSyntax(escapedSnippet);
+            const lineNumStr = ref.line ? String(ref.line).padStart(4) : '    ';
+            codeBlockHtml = `<div class="code-line code-highlight"><span class="code-linenum">${lineNumStr}</span><span class="code-text">${syntaxSnippet}</span></div>`;
+        }
+
         html += `
             <div class="ref-item">
                 <div class="ref-source">
                     <span class="ref-badge ${badge}">${badgeLabel}</span>
                     <span class="ref-file">${escapeHtml(ref.source)}</span>
                     ${ref.line ? `<span class="ref-line">:${ref.line}</span>` : ''}
+                    <button class="ref-copy-btn" title="Copy code" onclick="copyRefCode(this)">⧉</button>
                 </div>
-                <div class="ref-snippet">${highlightSnippet(escapeHtml(ref.snippet), resource.path)}</div>
+                <pre class="ref-code-block" tabindex="0">${codeBlockHtml}</pre>
             </div>
         `;
     }
     referenceContent.innerHTML = html;
 }
 
+/** Copy the code text from a reference block */
+function copyRefCode(btn) {
+    const codeBlock = btn.closest('.ref-item').querySelector('.ref-code-block');
+    if (!codeBlock) return;
+    // Extract just the code text (without line numbers)
+    const textParts = codeBlock.querySelectorAll('.code-text');
+    const text = Array.from(textParts).map(el => el.textContent).join('\n');
+    navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = '✓';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = '⧉'; btn.classList.remove('copied'); }, 1500);
+    });
+}
+// Expose to inline onclick
+window.copyRefCode = copyRefCode;
+
+/** Lightweight JS syntax highlighter — single-pass tokenizer to avoid corrupting inserted HTML tags */
+function highlightSyntax(escapedHtml) {
+    const TOKEN_RE = /(\/\/.*$)|("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|\b(var|let|const|function|return|if|else|for|while|new|this|class|extends|import|export|from|true|false|null|undefined|typeof|instanceof)\b|\b(cc|sp|ccs)\b|\b(\d+(?:\.\d+)?)\b/gm;
+
+    return escapedHtml.replace(TOKEN_RE, (match, comment, str, kw, ns, num) => {
+        if (comment) return `<span class="syn-cmt">${comment}</span>`;
+        if (str) return `<span class="syn-str">${str}</span>`;
+        if (kw) return `<span class="syn-kw">${kw}</span>`;
+        if (ns) return `<span class="syn-ns">${ns}</span>`;
+        if (num) return `<span class="syn-num">${num}</span>`;
+        return match;
+    });
+}
+
 function highlightSnippet(snippet, resourcePath) {
-    // Try to highlight the resource file name in the snippet
     const fileName = resourcePath.split('/').pop();
     if (fileName) {
         const escaped = fileName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

@@ -33,8 +33,8 @@ function parseJsFile(filePath, projectRoot, constMap) {
     const sourceRel = path.relative(projectRoot, filePath).replace(/\\/g, '/');
 
     // First pass: collect variable assignments that resolve to resource paths
-    // e.g., let pathAnimLastStage = BingoConst.ROOT_PATH + "Anim/last stage";
-    const varPathMap = new Map();
+    // Store the line index along with the resolved path for context
+    const varPathMap = new Map(); // varName → { path, declLineIdx }
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
         // Match: let varName = ClassName.PROP + "suffix"
@@ -48,7 +48,7 @@ function parseJsFile(filePath, projectRoot, constMap) {
             const key = `${className}.${propName}`;
             const rootPath = constMap.get(key) || constMap.get(propName);
             if (rootPath) {
-                varPathMap.set(varName, rootPath + suffix);
+                varPathMap.set(varName, { path: rootPath + suffix, declLineIdx: i });
             }
         }
         // Match: let varName = this.PROP + "suffix"
@@ -64,7 +64,7 @@ function parseJsFile(filePath, projectRoot, constMap) {
                 }
             }
             if (rootPath) {
-                varPathMap.set(varName, rootPath + m2[3]);
+                varPathMap.set(varName, { path: rootPath + m2[3], declLineIdx: i });
             }
         }
         // Match: let varName = "res/some/path" (direct string literal, no extension)
@@ -72,7 +72,7 @@ function parseJsFile(filePath, projectRoot, constMap) {
             const directAssignRegex = /(?:let|var|const)\s+(\w+)\s*=\s*["'](res\/[^"']+)["']/;
             const m3 = directAssignRegex.exec(line);
             if (m3 && !RESOURCE_EXTS.test(m3[2])) {
-                varPathMap.set(m3[1], m3[2]);
+                varPathMap.set(m3[1], { path: m3[2], declLineIdx: i });
             }
         }
     }
@@ -86,37 +86,73 @@ function parseJsFile(filePath, projectRoot, constMap) {
         if (trimmed.startsWith('//') || trimmed.startsWith('*') || trimmed.startsWith('/*')) continue;
 
         // Pattern 1: Direct string containing "res/" with resource extension
-        extractDirectPaths(line, lineNum, sourceRel, references);
+        extractDirectPaths(line, lineNum, sourceRel, references, lines, i);
 
         // Pattern 2: ROOT_PATH/constant concatenation
-        extractConstPaths(line, lineNum, sourceRel, constMap, references);
+        extractConstPaths(line, lineNum, sourceRel, constMap, references, lines, i);
 
         // Pattern 3: String with relative path (used in functions like loadTexture, cc.Sprite, etc.)
-        extractRelativeApiPaths(line, lineNum, sourceRel, references);
+        extractRelativeApiPaths(line, lineNum, sourceRel, references, lines, i);
 
         // Pattern 4: Variable + extension suffix (e.g., pathVar + ".json")
-        extractVarSuffixPaths(line, lineNum, sourceRel, varPathMap, references);
+        extractVarSuffixPaths(line, lineNum, sourceRel, varPathMap, references, lines, i);
     }
 
     return references;
 }
 
+/** Build a context snippet with surrounding lines and optional extra lines (e.g. variable declaration). */
+function buildContextSnippet(lines, lineIdx, extraLineIdxs) {
+    const CONTEXT = 2; // lines before/after
+    const start = Math.max(0, lineIdx - CONTEXT);
+    const end = Math.min(lines.length - 1, lineIdx + CONTEXT);
+
+    // Collect all line indices to include
+    const includeSet = new Set();
+    for (let j = start; j <= end; j++) includeSet.add(j);
+    if (extraLineIdxs) {
+        for (const idx of extraLineIdxs) {
+            if (idx >= 0 && idx < lines.length) {
+                includeSet.add(idx);
+                // Also add 1 line after the extra line for context
+                if (idx + 1 < lines.length) includeSet.add(idx + 1);
+            }
+        }
+    }
+
+    const sorted = [...includeSet].sort((a, b) => a - b);
+
+    // Build output with line numbers, inserting "..." for gaps
+    const result = [];
+    for (let k = 0; k < sorted.length; k++) {
+        const idx = sorted[k];
+        if (k > 0 && sorted[k] - sorted[k - 1] > 1) {
+            result.push({ lineNum: null, text: '...' });
+        }
+        result.push({ lineNum: idx + 1, text: lines[idx], highlight: idx === lineIdx });
+    }
+    return result;
+}
+
 /**
  * Pattern 4: Detect varName + ".ext" where varName was previously resolved to a base path.
  */
-function extractVarSuffixPaths(line, lineNum, source, varPathMap, references) {
+function extractVarSuffixPaths(line, lineNum, source, varPathMap, references, lines, lineIdx) {
     const regex = /(\w+)\s*\+\s*["'](\.\w+)["']/g;
     let match;
     while ((match = regex.exec(line)) !== null) {
         const varName = match[1];
         const ext = match[2];
-        const basePath = varPathMap.get(varName);
-        if (basePath && RESOURCE_EXTS.test(basePath + ext)) {
+        const entry = varPathMap.get(varName);
+        if (entry && RESOURCE_EXTS.test(entry.path + ext)) {
+            // Include the variable declaration line as extra context
+            const extraLines = entry.declLineIdx !== lineIdx ? [entry.declLineIdx] : [];
             references.push({
-                resourcePath: basePath + ext,
+                resourcePath: entry.path + ext,
                 source,
                 line: lineNum,
                 snippet: line.trim(),
+                context: buildContextSnippet(lines, lineIdx, extraLines),
                 type: 'js',
                 isPattern: false
             });
@@ -127,7 +163,7 @@ function extractVarSuffixPaths(line, lineNum, source, varPathMap, references) {
 /**
  * Pattern 1: Direct full paths like "res/Lobby/Friend/tabNotifyGift10.png"
  */
-function extractDirectPaths(line, lineNum, source, references) {
+function extractDirectPaths(line, lineNum, source, references, lines, lineIdx) {
     const regex = /["'](res\/[^"']+\.(png|jpg|jpeg|mp3|ogg|wav|json|plist|atlas|ttf|xml|fsh|vsh|frag|vert|ExportJson))["']/gi;
     let match;
     while ((match = regex.exec(line)) !== null) {
@@ -136,6 +172,7 @@ function extractDirectPaths(line, lineNum, source, references) {
             source,
             line: lineNum,
             snippet: line.trim(),
+            context: buildContextSnippet(lines, lineIdx),
             type: 'js',
             isPattern: false
         });
@@ -149,7 +186,7 @@ function extractDirectPaths(line, lineNum, source, references) {
  *   BingoConst.ROOT_PATH + "MainGui/gift" + index + ".png"
  *   SomeConst.ROOT_PATH + "Anim/cao" then later path + ".json", path + ".atlas"
  */
-function extractConstPaths(line, lineNum, source, constMap, references) {
+function extractConstPaths(line, lineNum, source, constMap, references, lines, lineIdx) {
     // Match patterns like: ConstName.PROP + "suffix"
     const concatRegex = /(\w+)\.(\w+)\s*\+\s*["']([^"']+)["']/g;
     let match;
@@ -166,13 +203,11 @@ function extractConstPaths(line, lineNum, source, constMap, references) {
         const fullPath = rootPath + suffix;
 
         // Check if this line also has index concatenation: + variable + ".ext"
-        // e.g., ROOT_PATH + "MainGui/gift" + imgIndex + ".png"
         const afterMatch = line.substring(match.index + match[0].length);
         const indexConcatRegex = /^\s*\+\s*\w+\s*\+\s*["'](\.[^"']+)["']/;
         const indexMatch = indexConcatRegex.exec(afterMatch);
 
         if (indexMatch) {
-            // This is an index-concatenated pattern → create wildcard
             const ext = indexMatch[1];
             const pattern = fullPath + '*' + ext;
             references.push({
@@ -180,24 +215,22 @@ function extractConstPaths(line, lineNum, source, constMap, references) {
                 source,
                 line: lineNum,
                 snippet: line.trim(),
+                context: buildContextSnippet(lines, lineIdx),
                 type: 'js',
                 isPattern: true
             });
         } else if (RESOURCE_EXTS.test(fullPath)) {
-            // Direct concatenation with extension → exact path
             references.push({
                 resourcePath: fullPath,
                 source,
                 line: lineNum,
                 snippet: line.trim(),
+                context: buildContextSnippet(lines, lineIdx),
                 type: 'js',
                 isPattern: false
             });
         } else {
-            // Might be a path prefix stored in a variable (e.g., path = ROOT_PATH + "Anim/cao")
-            // Look for subsequent lines using: path + ".json", path + ".atlas", etc.
-            // We'll scan the next few lines for this variable usage
-            extractVariableSuffixPaths(fullPath, line, lineNum, source, references);
+            extractVariableSuffixPaths(fullPath, line, lineNum, source, references, lines, lineIdx);
         }
     }
 
@@ -207,7 +240,6 @@ function extractConstPaths(line, lineNum, source, constMap, references) {
         const propName = match[1];
         const suffix = match[2];
 
-        // Try all possible class prefixes from constMap
         let rootPath = constMap.get(propName);
         if (!rootPath) {
             for (const [key, val] of constMap) {
@@ -233,6 +265,7 @@ function extractConstPaths(line, lineNum, source, constMap, references) {
                 source,
                 line: lineNum,
                 snippet: line.trim(),
+                context: buildContextSnippet(lines, lineIdx),
                 type: 'js',
                 isPattern: true
             });
@@ -242,11 +275,12 @@ function extractConstPaths(line, lineNum, source, constMap, references) {
                 source,
                 line: lineNum,
                 snippet: line.trim(),
+                context: buildContextSnippet(lines, lineIdx),
                 type: 'js',
                 isPattern: false
             });
         } else {
-            extractVariableSuffixPaths(fullPath, line, lineNum, source, references);
+            extractVariableSuffixPaths(fullPath, line, lineNum, source, references, lines, lineIdx);
         }
     }
 }
@@ -256,17 +290,15 @@ function extractConstPaths(line, lineNum, source, constMap, references) {
  * The variable "path" is later used as: path + ".json", path + ".atlas"
  * We detect the assignment and generate both paths.
  */
-function extractVariableSuffixPaths(basePath, line, lineNum, source, references) {
-    // Look for variable assignment: let/var/const varName = ... our concat
+function extractVariableSuffixPaths(basePath, line, lineNum, source, references, lines, lineIdx) {
     const assignRegex = /(?:let|var|const)\s+(\w+)\s*=/;
     const assignMatch = assignRegex.exec(line);
     if (!assignMatch) return;
 
-    // Generate common animation/resource extension pairs
     const commonPairs = [
-        ['.json', '.atlas'],  // Spine animation
-        ['.json', '.png'],    // Sprite sheet
-        ['.plist', '.png'],   // Cocos plist sheet
+        ['.json', '.atlas'],
+        ['.json', '.png'],
+        ['.plist', '.png'],
     ];
 
     for (const pair of commonPairs) {
@@ -276,6 +308,7 @@ function extractVariableSuffixPaths(basePath, line, lineNum, source, references)
                 source,
                 line: lineNum,
                 snippet: line.trim(),
+                context: buildContextSnippet(lines, lineIdx),
                 type: 'js',
                 isPattern: false
             });
@@ -285,10 +318,8 @@ function extractVariableSuffixPaths(basePath, line, lineNum, source, references)
 
 /**
  * Pattern 3: Relative paths in API calls (without res/ prefix).
- * These are less reliable but still worth tracking.
- * e.g., loadTexture("Friend/bg.jpg"), ccs.load("RoomItemCell.json")
  */
-function extractRelativeApiPaths(line, lineNum, source, references) {
+function extractRelativeApiPaths(line, lineNum, source, references, lines, lineIdx) {
     // Match common Cocos API calls with string arguments
     const apiPatterns = [
         /\.loadTexture\s*\(\s*["']([^"']+\.(png|jpg|jpeg))["']/gi,
@@ -318,9 +349,10 @@ function extractRelativeApiPaths(line, lineNum, source, references) {
                 source,
                 line: lineNum,
                 snippet: line.trim(),
+                context: buildContextSnippet(lines, lineIdx),
                 type: 'js',
                 isPattern: false,
-                isRelative: true // Mark as needing path resolution during matching
+                isRelative: true
             });
         }
     }
