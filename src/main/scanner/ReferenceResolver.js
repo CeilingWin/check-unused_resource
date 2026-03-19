@@ -1,4 +1,5 @@
 const path = require('path');
+const fs = require('fs');
 const { scanResources, collectJsFiles } = require('./ResourceScanner');
 const { parseJsonUI } = require('./parsers/JsonUIParser');
 const { buildConstMap } = require('./parsers/ConstResolver');
@@ -74,6 +75,10 @@ function resolveReferences(projectRoot, onProgress) {
     progress({ phase: 'matching', message: 'Matching references...', current: 0, total: 0 });
     const matched = matchReferences(allReferences, resources);
 
+    // Phase 6b: Resolve companion textures (.atlas → .png, .plist → .png)
+    // If an atlas/plist is used, its texture PNGs are also used
+    resolveCompanionTextures(matched, resources);
+
     // Phase 7: Build stats
     let usedCount = 0;
     let unusedCount = 0;
@@ -112,6 +117,67 @@ function resolveReferences(projectRoot, onProgress) {
     }
 
     return { resourceList, stats };
+}
+
+/**
+ * Resolve companion textures: when an .atlas or .plist file is used,
+ * the .png textures it references should also be marked as used.
+ */
+function resolveCompanionTextures(matched, resources) {
+    for (const [resPath, refs] of matched) {
+        if (refs.length === 0) continue;
+
+        const ext = path.extname(resPath).toLowerCase();
+        const resDir = path.dirname(resPath);
+
+        if (ext === '.atlas') {
+            // Parse atlas to find texture filenames (lines ending with .png)
+            const meta = resources.get(resPath);
+            if (!meta) continue;
+            try {
+                const content = fs.readFileSync(meta.absPath, 'utf-8');
+                const lines = content.split('\n');
+                for (const line of lines) {
+                    const trimmed = line.trim();
+                    if (/\.(png|jpg|jpeg)$/i.test(trimmed)) {
+                        const texPath = resDir + '/' + trimmed;
+                        if (matched.has(texPath) && matched.get(texPath).length === 0) {
+                            matched.get(texPath).push({
+                                source: resPath,
+                                line: 0,
+                                snippet: `Texture referenced by ${path.basename(resPath)}`,
+                                type: 'atlas-texture',
+                                isPattern: false
+                            });
+                        }
+                    }
+                }
+            } catch { /* skip unreadable */ }
+        }
+
+        if (ext === '.plist') {
+            // Parse plist to find texture filename
+            const meta = resources.get(resPath);
+            if (!meta) continue;
+            try {
+                const content = fs.readFileSync(meta.absPath, 'utf-8');
+                // Match <key>textureFileName</key> or <key>realTextureFileName</key>
+                const texMatch = content.match(/<key>(?:real)?[Tt]exture[Ff]ile[Nn]ame<\/key>\s*<string>([^<]+)<\/string>/);
+                if (texMatch) {
+                    const texPath = resDir + '/' + texMatch[1];
+                    if (matched.has(texPath) && matched.get(texPath).length === 0) {
+                        matched.get(texPath).push({
+                            source: resPath,
+                            line: 0,
+                            snippet: `Texture referenced by ${path.basename(resPath)}`,
+                            type: 'plist-texture',
+                            isPattern: false
+                        });
+                    }
+                }
+            } catch { /* skip unreadable */ }
+        }
+    }
 }
 
 module.exports = { resolveReferences };
