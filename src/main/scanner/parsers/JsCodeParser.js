@@ -67,6 +67,14 @@ function parseJsFile(filePath, projectRoot, constMap) {
                 varPathMap.set(varName, rootPath + m2[3]);
             }
         }
+        // Match: let varName = "res/some/path" (direct string literal, no extension)
+        if (!m && !m2) {
+            const directAssignRegex = /(?:let|var|const)\s+(\w+)\s*=\s*["'](res\/[^"']+)["']/;
+            const m3 = directAssignRegex.exec(line);
+            if (m3 && !RESOURCE_EXTS.test(m3[2])) {
+                varPathMap.set(m3[1], m3[2]);
+            }
+        }
     }
 
     for (let i = 0; i < lines.length; i++) {
