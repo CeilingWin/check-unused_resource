@@ -21,12 +21,14 @@
     --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --font-mono: 'Cascadia Code', 'Fira Code', Consolas, monospace;
     --transition: 150ms ease;
+    --font-size-base: 13px;
+    --code-font-size: 11px;
 }
 
 html, body {
     height: 100%;
     font-family: var(--font);
-    font-size: 16px;
+    font-size: var(--font-size-base);
     color: var(--text-primary);
     background: var(--bg-primary);
     overflow: hidden;
@@ -322,12 +324,12 @@ code {
 .ref-badge.plist { background: #4a148c; color: #ce93d8; }
 .ref-file {
     font-family: var(--font-mono);
-    font-size: 11px;
+    font-size: var(--font-size-base);
     color: var(--accent);
 }
 .ref-line {
     font-family: var(--font-mono);
-    font-size: 11px;
+    font-size: var(--font-size-base);
     color: var(--text-muted);
 }
 .ref-copy-btn {
@@ -348,7 +350,7 @@ code {
 /* Code block */
 .ref-code-block {
     font-family: var(--font-mono);
-    font-size: 11px;
+    font-size: var(--code-font-size);
     line-height: 1.6;
     margin: 4px 0 0 0;
     padding: 6px 0;
@@ -401,6 +403,110 @@ code {
     border-radius: 2px;
     padding: 0 2px;
 }
+
+/* ===== Settings Popup ===== */
+.settings-popup {
+    position: fixed;
+    top: 48px;
+    right: 12px;
+    width: 320px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    z-index: 500;
+    user-select: none;
+}
+.settings-popup[hidden] { display: none; }
+.settings-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+.settings-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+.settings-close:hover { color: var(--text-primary); background: var(--bg-hover); }
+.settings-body {
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+.settings-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.settings-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    min-width: 100px;
+}
+.settings-control {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+}
+.font-size-btn {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background var(--transition);
+}
+.font-size-btn:hover { background: var(--bg-hover); }
+#font-size-slider, #code-font-size-slider {
+    flex: 1;
+    accent-color: var(--accent);
+    height: 4px;
+    cursor: pointer;
+}
+.font-size-value {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--accent);
+    min-width: 32px;
+    text-align: right;
+}
+.settings-footer {
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+    display: flex;
+    justify-content: flex-end;
+}
+.btn-settings-reset {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all var(--transition);
+}
+.btn-settings-reset:hover { border-color: var(--accent); color: var(--accent); }
 
 /* ===== Loading ===== */
 .loading-overlay {

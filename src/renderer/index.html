@@ -32,6 +32,7 @@
             <div class="topbar-right">
                 <button id="btn-rescan" class="btn-icon" title="Rescan">🔄</button>
                 <button id="btn-export" class="btn-icon" title="Export report">📥</button>
+                <button id="btn-settings" class="btn-icon" title="Settings">⚙</button>
             </div>
         </div>
 
@@ -68,6 +69,36 @@
         </div>
     </div>
 
+    <!-- Settings Popup -->
+    <div id="settings-popup" class="settings-popup" hidden>
+        <div class="settings-header">
+            <span>Settings</span>
+            <button id="btn-settings-close" class="settings-close" title="Close">✕</button>
+        </div>
+        <div class="settings-body">
+            <div class="settings-row">
+                <label class="settings-label" for="font-size-slider">Font size</label>
+                <div class="settings-control">
+                    <button class="font-size-btn" id="font-size-dec" title="Decrease">−</button>
+                    <input type="range" id="font-size-slider" min="11" max="20" step="1" value="13">
+                    <button class="font-size-btn" id="font-size-inc" title="Increase">+</button>
+                    <span id="font-size-value" class="font-size-value">13px</span>
+                </div>
+            </div>
+            <div class="settings-row">
+                <label class="settings-label" for="code-font-size-slider">Code font size</label>
+                <div class="settings-control">
+                    <button class="font-size-btn" id="code-font-size-dec" title="Decrease">−</button>
+                    <input type="range" id="code-font-size-slider" min="9" max="18" step="1" value="11">
+                    <button class="font-size-btn" id="code-font-size-inc" title="Increase">+</button>
+                    <span id="code-font-size-value" class="font-size-value">11px</span>
+                </div>
+            </div>
+            <div class="settings-footer">
+                <button id="btn-font-reset" class="btn-settings-reset">Reset defaults</button>
+            </div>
+        </div>
+    </div>
     <script src="app.js"></script>
 </body>
 </html>

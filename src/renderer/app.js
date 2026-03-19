@@ -18,6 +18,7 @@ const btnSelectFolder = document.getElementById('btn-select-folder');
 const btnChangeFolder = document.getElementById('btn-change-folder');
 const btnRescan = document.getElementById('btn-rescan');
 const btnExport = document.getElementById('btn-export');
+const btnSettings = document.getElementById('btn-settings');
 const projectPathEl = document.getElementById('project-path');
 const filterBar = document.getElementById('filter-bar');
 const treeContainer = document.getElementById('tree-container');
@@ -34,6 +35,7 @@ function init() {
     btnExport.addEventListener('click', exportReport);
     buildFilterBar();
     setupResizer();
+    initSettings();
 }
 
 // ===== Folder Selection =====
@@ -608,6 +610,86 @@ function formatBytes(bytes) {
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+// ===== Settings =====
+const SETTINGS_DEFAULTS = { fontSize: 13, codeFontSize: 11 };
+
+function initSettings() {
+    const popup = document.getElementById('settings-popup');
+    const slider = document.getElementById('font-size-slider');
+    const sliderDisplay = document.getElementById('font-size-value');
+    const codeSlider = document.getElementById('code-font-size-slider');
+    const codeSliderDisplay = document.getElementById('code-font-size-value');
+
+    // Load saved settings
+    const saved = {
+        fontSize: parseInt(localStorage.getItem('crs-font-size')) || SETTINGS_DEFAULTS.fontSize,
+        codeFontSize: parseInt(localStorage.getItem('crs-code-font-size')) || SETTINGS_DEFAULTS.codeFontSize
+    };
+    applyFontSize(saved.fontSize, saved.codeFontSize);
+    slider.value = saved.fontSize;
+    sliderDisplay.textContent = saved.fontSize + 'px';
+    codeSlider.value = saved.codeFontSize;
+    codeSliderDisplay.textContent = saved.codeFontSize + 'px';
+
+    // Toggle popup
+    btnSettings.addEventListener('click', (e) => {
+        e.stopPropagation();
+        popup.hidden = !popup.hidden;
+    });
+    document.getElementById('btn-settings-close').addEventListener('click', () => {
+        popup.hidden = true;
+    });
+    document.addEventListener('click', (e) => {
+        if (!popup.hidden && !popup.contains(e.target) && e.target !== btnSettings) {
+            popup.hidden = true;
+        }
+    });
+
+    // Font size slider
+    slider.addEventListener('input', () => {
+        const val = parseInt(slider.value);
+        sliderDisplay.textContent = val + 'px';
+        applyFontSize(val, parseInt(codeSlider.value));
+        localStorage.setItem('crs-font-size', val);
+    });
+    document.getElementById('font-size-dec').addEventListener('click', () => {
+        if (slider.value > slider.min) { slider.value--; slider.dispatchEvent(new Event('input')); }
+    });
+    document.getElementById('font-size-inc').addEventListener('click', () => {
+        if (slider.value < slider.max) { slider.value++; slider.dispatchEvent(new Event('input')); }
+    });
+
+    // Code font size slider
+    codeSlider.addEventListener('input', () => {
+        const val = parseInt(codeSlider.value);
+        codeSliderDisplay.textContent = val + 'px';
+        applyFontSize(parseInt(slider.value), val);
+        localStorage.setItem('crs-code-font-size', val);
+    });
+    document.getElementById('code-font-size-dec').addEventListener('click', () => {
+        if (codeSlider.value > codeSlider.min) { codeSlider.value--; codeSlider.dispatchEvent(new Event('input')); }
+    });
+    document.getElementById('code-font-size-inc').addEventListener('click', () => {
+        if (codeSlider.value < codeSlider.max) { codeSlider.value++; codeSlider.dispatchEvent(new Event('input')); }
+    });
+
+    // Reset
+    document.getElementById('btn-font-reset').addEventListener('click', () => {
+        slider.value = SETTINGS_DEFAULTS.fontSize;
+        codeSlider.value = SETTINGS_DEFAULTS.codeFontSize;
+        sliderDisplay.textContent = SETTINGS_DEFAULTS.fontSize + 'px';
+        codeSliderDisplay.textContent = SETTINGS_DEFAULTS.codeFontSize + 'px';
+        applyFontSize(SETTINGS_DEFAULTS.fontSize, SETTINGS_DEFAULTS.codeFontSize);
+        localStorage.removeItem('crs-font-size');
+        localStorage.removeItem('crs-code-font-size');
+    });
+}
+
+function applyFontSize(fontSize, codeFontSize) {
+    document.documentElement.style.setProperty('--font-size-base', fontSize + 'px');
+    document.documentElement.style.setProperty('--code-font-size', codeFontSize + 'px');
 }
 
 // ===== Start =====

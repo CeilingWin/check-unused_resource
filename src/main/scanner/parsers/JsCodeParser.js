@@ -162,13 +162,36 @@ function extractVarSuffixPaths(line, lineNum, source, varPathMap, references, li
 
 /**
  * Pattern 1: Direct full paths like "res/Lobby/Friend/tabNotifyGift10.png"
+ * Also matches extensionless paths like "res/Event/Bingo/LocalizeBingo_en"
  */
 function extractDirectPaths(line, lineNum, source, references, lines, lineIdx) {
+    // With extension
     const regex = /["'](res\/[^"']+\.(png|jpg|jpeg|mp3|ogg|wav|json|plist|atlas|ttf|xml|fsh|vsh|frag|vert|ExportJson))["']/gi;
     let match;
+    const foundPaths = new Set();
     while ((match = regex.exec(line)) !== null) {
+        foundPaths.add(match[1]);
         references.push({
             resourcePath: match[1],
+            source,
+            line: lineNum,
+            snippet: line.trim(),
+            context: buildContextSnippet(lines, lineIdx),
+            type: 'js',
+            isPattern: false
+        });
+    }
+
+    // Without extension (e.g., LocalizedString.add("res/Event/Bingo/LocalizeBingo_en"))
+    const noExtRegex = /["'](res\/[^"']+)["']/gi;
+    while ((match = noExtRegex.exec(line)) !== null) {
+        const p = match[1];
+        // Skip if already matched with extension, or if path ends with / (directory)
+        if (foundPaths.has(p) || p.endsWith('/')) continue;
+        // Skip if it has a known extension (already handled above)
+        if (RESOURCE_EXTS.test(p)) continue;
+        references.push({
+            resourcePath: p,
             source,
             line: lineNum,
             snippet: line.trim(),
