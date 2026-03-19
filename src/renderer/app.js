@@ -84,7 +84,10 @@ async function startScan() {
         }
     });
 
-    const result = await window.api.scanProject(projectPath);
+    const scanOptions = {
+        filenameMatch: document.getElementById('chk-filename-match')?.checked || false
+    };
+    const result = await window.api.scanProject(projectPath, scanOptions);
 
     // Remove overlay
     overlay.remove();
@@ -160,7 +163,8 @@ function buildFilterBar() {
 function updateStats() {
     if (!scanResult) return;
     const s = scanResult.stats;
-    statusStats.textContent = `${s.totalResources} total · ${s.usedCount} used · ${s.unusedCount} unused`;
+    statusStats.textContent = `${s.totalResources} total · ${s.usedCount} used · ${s.unusedCount} unused`
+        + (s.filenameMatchCount ? ` · ${s.filenameMatchCount} filename-matched` : '');
 }
 
 // ===== Tree View =====
@@ -440,8 +444,12 @@ function showReferences(resource) {
 
     let html = '';
     for (const ref of resource.references) {
-        const badge = ref.type === 'json' ? 'json' : ref.type === 'plist' ? 'plist' : 'js';
-        const badgeLabel = ref.type === 'json' ? 'JSON' : ref.type === 'plist' ? 'PLIST' : 'JS';
+        const badge = ref.type === 'json' ? 'json' : ref.type === 'plist' ? 'plist'
+            : ref.type === 'atlas-texture' ? 'atlas' : ref.type === 'plist-texture' ? 'plist'
+            : ref.type === 'filename-match' ? 'fname' : 'js';
+        const badgeLabel = ref.type === 'json' ? 'JSON' : ref.type === 'plist' ? 'PLIST'
+            : ref.type === 'atlas-texture' ? 'ATLAS' : ref.type === 'plist-texture' ? 'PLIST'
+            : ref.type === 'filename-match' ? 'FNAME' : 'JS';
 
         let codeBlockHtml;
         if (ref.context && ref.context.length > 0) {
@@ -613,7 +621,7 @@ function formatBytes(bytes) {
 }
 
 // ===== Settings =====
-const SETTINGS_DEFAULTS = { fontSize: 13, codeFontSize: 11 };
+const SETTINGS_DEFAULTS = { fontSize: 13, codeFontSize: 11, filenameMatch: false };
 
 function initSettings() {
     const popup = document.getElementById('settings-popup');
@@ -621,12 +629,14 @@ function initSettings() {
     const sliderDisplay = document.getElementById('font-size-value');
     const codeSlider = document.getElementById('code-font-size-slider');
     const codeSliderDisplay = document.getElementById('code-font-size-value');
+    const chkFilenameMatch = document.getElementById('chk-filename-match');
 
     // Load saved settings
     const saved = {
         fontSize: parseInt(localStorage.getItem('crs-font-size')) || SETTINGS_DEFAULTS.fontSize,
         codeFontSize: parseInt(localStorage.getItem('crs-code-font-size')) || SETTINGS_DEFAULTS.codeFontSize
     };
+    chkFilenameMatch.checked = localStorage.getItem('crs-filename-match') === 'true';
     applyFontSize(saved.fontSize, saved.codeFontSize);
     slider.value = saved.fontSize;
     sliderDisplay.textContent = saved.fontSize + 'px';
@@ -675,6 +685,11 @@ function initSettings() {
         if (codeSlider.value < codeSlider.max) { codeSlider.value++; codeSlider.dispatchEvent(new Event('input')); }
     });
 
+    // Filename match checkbox
+    chkFilenameMatch.addEventListener('change', () => {
+        localStorage.setItem('crs-filename-match', chkFilenameMatch.checked);
+    });
+
     // Reset
     document.getElementById('btn-font-reset').addEventListener('click', () => {
         slider.value = SETTINGS_DEFAULTS.fontSize;
@@ -684,6 +699,8 @@ function initSettings() {
         applyFontSize(SETTINGS_DEFAULTS.fontSize, SETTINGS_DEFAULTS.codeFontSize);
         localStorage.removeItem('crs-font-size');
         localStorage.removeItem('crs-code-font-size');
+        chkFilenameMatch.checked = SETTINGS_DEFAULTS.filenameMatch;
+        localStorage.removeItem('crs-filename-match');
     });
 }
 

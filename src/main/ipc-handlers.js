@@ -32,7 +32,7 @@ function registerIpcHandlers() {
     });
 
     // Scan project
-    ipcMain.handle('scan-project', async (event, folderPath) => {
+    ipcMain.handle('scan-project', async (event, folderPath, options) => {
         const win = BrowserWindow.getFocusedWindow();
 
         try {
@@ -40,7 +40,7 @@ function registerIpcHandlers() {
                 if (win && !win.isDestroyed()) {
                     win.webContents.send('scan-progress', progress);
                 }
-            });
+            }, options);
 
             return { success: true, data: result };
         } catch (err) {

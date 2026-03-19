@@ -2,7 +2,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('api', {
     selectFolder: () => ipcRenderer.invoke('select-folder'),
-    scanProject: (folderPath) => ipcRenderer.invoke('scan-project', folderPath),
+    scanProject: (folderPath, options) => ipcRenderer.invoke('scan-project', folderPath, options),
     getPreview: (filePath) => ipcRenderer.invoke('get-preview', filePath),
 
     onScanProgress: (callback) => {

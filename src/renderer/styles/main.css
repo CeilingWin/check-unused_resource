@@ -322,6 +322,8 @@ code {
 .ref-badge.json { background: #1b5e20; color: #a5d6a7; }
 .ref-badge.js { background: #e65100; color: #ffcc80; }
 .ref-badge.plist { background: #4a148c; color: #ce93d8; }
+.ref-badge.atlas { background: #004d40; color: #80cbc4; }
+.ref-badge.fname { background: #0d47a1; color: #90caf9; }
 .ref-file {
     font-family: var(--font-mono);
     font-size: var(--font-size-base);
@@ -507,6 +509,41 @@ code {
     transition: all var(--transition);
 }
 .btn-settings-reset:hover { border-color: var(--accent); color: var(--accent); }
+
+.settings-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 4px 0;
+}
+.settings-section-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.settings-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--text-primary);
+    user-select: none;
+}
+.settings-checkbox-label input[type="checkbox"] {
+    accent-color: var(--accent);
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+}
+.settings-hint {
+    font-size: 10px;
+    color: var(--text-muted);
+    line-height: 1.4;
+    padding-left: 22px;
+    margin-top: -6px;
+}
 
 /* ===== Loading ===== */
 .loading-overlay {

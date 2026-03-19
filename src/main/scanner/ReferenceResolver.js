@@ -21,9 +21,10 @@ const { matchReferences } = require('./PatternMatcher');
  * @param {function} onProgress - Progress callback({ phase, message, current, total })
  * @returns {{ resources: Map, results: Map, stats: object }}
  */
-function resolveReferences(projectRoot, onProgress) {
+function resolveReferences(projectRoot, onProgress, options) {
     const resDir = path.join(projectRoot, 'res');
     const srcDir = path.join(projectRoot, 'src');
+    const opts = options || {};
 
     const progress = (data) => { if (onProgress) onProgress(data); };
 
@@ -79,6 +80,13 @@ function resolveReferences(projectRoot, onProgress) {
     // If an atlas/plist is used, its texture PNGs are also used
     resolveCompanionTextures(matched, resources);
 
+    // Phase 6c: Filename matching (optional)
+    let filenameMatchCount = 0;
+    if (opts.filenameMatch) {
+        progress({ phase: 'filename-match', message: 'Matching by filename in strings...', current: 0, total: 0 });
+        filenameMatchCount = resolveByFilename(matched, jsFiles, projectRoot, progress);
+    }
+
     // Phase 7: Build stats
     let usedCount = 0;
     let unusedCount = 0;
@@ -97,7 +105,8 @@ function resolveReferences(projectRoot, onProgress) {
         totalReferences: allReferences.length,
         cocosJsonCount: cocosJsonFiles.length,
         jsFileCount: jsFiles.length,
-        constCount: constMap.size
+        constCount: constMap.size,
+        filenameMatchCount
     };
 
     progress({ phase: 'done', message: 'Scan complete', current: 1, total: 1 });
@@ -178,6 +187,107 @@ function resolveCompanionTextures(matched, resources) {
             } catch { /* skip unreadable */ }
         }
     }
+}
+
+/**
+ * For each unused resource, check if its filename (without extension)
+ * appears inside a string literal in JS source code. Comments are stripped first.
+ */
+function resolveByFilename(matched, jsFiles, projectRoot, progress) {
+    // Collect unused resources and group by basename (no ext)
+    const basenameToRes = new Map();
+    for (const [resPath, refs] of matched) {
+        if (refs.length > 0) continue;
+        const ext = path.extname(resPath);
+        const basename = path.basename(resPath, ext);
+        if (!basename || basename.length < 2) continue; // skip very short names
+        if (!basenameToRes.has(basename)) {
+            basenameToRes.set(basename, []);
+        }
+        basenameToRes.get(basename).push(resPath);
+    }
+
+    if (basenameToRes.size === 0) return 0;
+
+    let totalMatched = 0;
+
+    for (let i = 0; i < jsFiles.length; i++) {
+        if (i % 50 === 0) {
+            progress({ phase: 'filename-match', message: `Filename matching (${i}/${jsFiles.length})...`, current: i, total: jsFiles.length });
+        }
+
+        let content;
+        try {
+            content = fs.readFileSync(jsFiles[i], 'utf-8');
+        } catch { continue; }
+
+        // Strip comments (single-line and multi-line)
+        const stripped = content.replace(/\/\/[^\n]*/g, '  ').replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '));
+
+        // Extract all string literal contents
+        const strings = [];
+        const strRegex = /"([^"\\]*(?:\\.[^"\\]*)*)"|'([^'\\]*(?:\\.[^'\\]*)*)'/g;
+        let sm;
+        while ((sm = strRegex.exec(stripped)) !== null) {
+            strings.push(sm[1] !== undefined ? sm[1] : sm[2]);
+        }
+
+        if (strings.length === 0) continue;
+
+        const relSource = path.relative(projectRoot, jsFiles[i]).replace(/\\/g, '/');
+
+        // Find the line number for a match position (for context)
+        const lines = content.split('\n');
+
+        for (const [basename, resPaths] of basenameToRes) {
+            // Check if this basename appears in any string literal
+            const foundInStr = strings.find(s => s.includes(basename));
+            if (!foundInStr) continue;
+
+            // Find line number in original content
+            let lineIdx = 0;
+            const searchStr = basename;
+            for (let li = 0; li < lines.length; li++) {
+                if (lines[li].includes(searchStr)) {
+                    // Verify it's inside a string on this line
+                    const lineStrRegex = /"([^"\\]*(?:\\.[^"\\]*)*)"|'([^'\\]*(?:\\.[^'\\]*)*)'/g;
+                    let lm;
+                    while ((lm = lineStrRegex.exec(lines[li])) !== null) {
+                        const strContent = lm[1] !== undefined ? lm[1] : lm[2];
+                        if (strContent.includes(searchStr)) {
+                            lineIdx = li;
+                            break;
+                        }
+                    }
+                    if (lineIdx > 0) break;
+                }
+            }
+
+            // Build context array (same format as JsCodeParser)
+            const startCtx = Math.max(0, lineIdx - 1);
+            const endCtx = Math.min(lines.length - 1, lineIdx + 1);
+            const context = [];
+            for (let ci = startCtx; ci <= endCtx; ci++) {
+                context.push({ lineNum: ci + 1, text: lines[ci], highlight: ci === lineIdx });
+            }
+            const snippet = lines.slice(startCtx, endCtx + 1).join('\n');
+
+            for (const resPath of resPaths) {
+                if (matched.get(resPath).length > 0) continue; // already matched
+                matched.get(resPath).push({
+                    source: relSource,
+                    line: lineIdx + 1,
+                    snippet: snippet,
+                    context: context,
+                    type: 'filename-match',
+                    isPattern: false
+                });
+                totalMatched++;
+            }
+        }
+    }
+
+    return totalMatched;
 }
 
 module.exports = { resolveReferences };
