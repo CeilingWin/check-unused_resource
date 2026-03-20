@@ -26,7 +26,7 @@ function createWindow() {
         icon: path.join(__dirname, 'assets', 'icons', 'icon.png'),
         title: 'Cocos Resource Scanner'
     });
-    mainWindow.setOpacity(0.93);
+    mainWindow.setOpacity(0.97);
 
     mainWindow.loadFile(path.join(__dirname, 'src', 'renderer', 'index.html'));
 

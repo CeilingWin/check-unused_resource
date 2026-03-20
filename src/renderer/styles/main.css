@@ -54,10 +54,12 @@ code {
 .screen.active { display: flex; }
 
 /* ===== Title bar drag region ===== */
-.topbar-left, .picker-content {
+#topbar, .picker-content {
     -webkit-app-region: drag;
 }
-.topbar-left button, .picker-content button, .topbar-center, .topbar-right {
+#topbar button, #topbar select, #topbar input,
+#topbar .btn-filter, #topbar .search-input,
+.picker-content button {
     -webkit-app-region: no-drag;
 }
 

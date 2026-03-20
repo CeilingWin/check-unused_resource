@@ -153,7 +153,7 @@ function registerIpcHandlers() {
                 height: 700,
                 minWidth: 500,
                 minHeight: 400,
-                backgroundColor: '#1e1e1e',
+                backgroundColor: '#0b0e1c',
                 parent: parentWin || undefined,
                 titleBarStyle: 'hidden',
                 titleBarOverlay: {
@@ -168,6 +168,7 @@ function registerIpcHandlers() {
                 },
                 title: fileName + ' (Read Only)'
             });
+            viewerWin.setOpacity(0.97);
 
             viewerWin.loadFile(path.join(__dirname, '..', 'renderer', 'code-viewer.html'));
 
