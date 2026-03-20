@@ -741,9 +741,9 @@ function showContextMenu(e, node, type) {
 
     contextMenuTarget = { node, type };
 
-    // Show/hide delete option - only show for folders
-    const deleteItem = contextMenu.querySelector('[data-action="delete-unused"]');
-    deleteItem.style.display = type === 'dir' ? '' : 'none';
+    // Show/hide items based on type
+    contextMenu.querySelector('[data-action="delete-file"]').style.display = type === 'file' ? '' : 'none';
+    contextMenu.querySelector('[data-action="delete-unused"]').style.display = type === 'dir' ? '' : 'none';
 
     contextMenu.hidden = false;
 
@@ -776,6 +776,7 @@ contextMenu.querySelectorAll('.context-menu-item').forEach(item => {
         hideContextMenu();
         if (!target) return;
         if (action === 'view-details') handleViewDetails(target);
+        if (action === 'delete-file') handleDeleteFile(target);
         if (action === 'delete-unused') handleDeleteUnused(target);
     });
 });
@@ -800,11 +801,11 @@ function handleViewDetails(target) {
     if (target.type === 'file') {
         const res = target.node.resource;
         body.innerHTML = `
-            <div class="detail-row"><span class="detail-label">Tên file</span><span class="detail-value">${escapeHtml(res.path)}</span></div>
-            <div class="detail-row"><span class="detail-label">Dung lượng</span><span class="detail-value">${formatBytes(res.size)}</span></div>
-            <div class="detail-row"><span class="detail-label">Loại</span><span class="detail-value">${escapeHtml(res.type)}</span></div>
-            <div class="detail-row"><span class="detail-label">Trạng thái</span><span class="detail-value ${res.used ? 'green' : 'red'}">${res.used ? '✓ Đang dùng' : '✗ Không dùng'}</span></div>
-            ${res.used ? `<div class="detail-row"><span class="detail-label">Số references</span><span class="detail-value">${res.references.length}</span></div>` : ''}
+            <div class="detail-row"><span class="detail-label">File</span><span class="detail-value">${escapeHtml(res.path)}</span></div>
+            <div class="detail-row"><span class="detail-label">Size</span><span class="detail-value">${formatBytes(res.size)}</span></div>
+            <div class="detail-row"><span class="detail-label">Type</span><span class="detail-value">${escapeHtml(res.type)}</span></div>
+            <div class="detail-row"><span class="detail-label">Status</span><span class="detail-value ${res.used ? 'green' : 'red'}">${res.used ? '✓ Used' : '✗ Unused'}</span></div>
+            ${res.used ? `<div class="detail-row"><span class="detail-label">References</span><span class="detail-value">${res.references.length}</span></div>` : ''}
         `;
     } else {
         const files = collectNodeFiles(target.node);
@@ -813,24 +814,57 @@ function handleViewDetails(target) {
         const unusedFiles = files.filter(f => !f.used);
 
         let html = `
-            <div class="detail-row"><span class="detail-label">Thư mục</span><span class="detail-value">${escapeHtml(target.node.path)}</span></div>
-            <div class="detail-row"><span class="detail-label">Số file</span><span class="detail-value">${files.length}</span></div>
+            <div class="detail-row"><span class="detail-label">Folder</span><span class="detail-value">${escapeHtml(target.node.path)}</span></div>
+            <div class="detail-row"><span class="detail-label">Files</span><span class="detail-value">${files.length}</span></div>
         `;
 
         if (filterMode === 'all') {
             html += `
-                <div class="detail-row"><span class="detail-label">Đang dùng</span><span class="detail-value green">${usedFiles.length}</span></div>
-                <div class="detail-row"><span class="detail-label">Không dùng</span><span class="detail-value red">${unusedFiles.length}</span></div>
+                <div class="detail-row"><span class="detail-label">Used</span><span class="detail-value green">${usedFiles.length}</span></div>
+                <div class="detail-row"><span class="detail-label">Unused</span><span class="detail-value red">${unusedFiles.length}</span></div>
             `;
         }
 
-        html += `<div class="detail-row"><span class="detail-label">Tổng dung lượng</span><span class="detail-value">${formatBytes(totalSize)}</span></div>`;
+        html += `<div class="detail-row"><span class="detail-label">Total size</span><span class="detail-value">${formatBytes(totalSize)}</span></div>`;
         body.innerHTML = html;
     }
 
     modal.hidden = false;
     document.getElementById('btn-details-close').onclick = () => { modal.hidden = true; };
     modal.addEventListener('click', (e) => { if (e.target === modal) modal.hidden = true; }, { once: true });
+}
+
+// ===== Delete Single File =====
+function handleDeleteFile(target) {
+    if (target.type !== 'file') return;
+    const res = target.node.resource;
+
+    const confirmModal = document.getElementById('delete-confirm-modal');
+    const confirmBody = document.getElementById('delete-confirm-body');
+    confirmBody.innerHTML = `
+        <p>Are you sure you want to delete this file?</p>
+        <p><strong style="font-family: var(--font-mono); word-break: break-all;">${escapeHtml(res.path)}</strong></p>
+        <p>Size: <strong>${formatBytes(res.size)}</strong></p>
+        <p style="color: var(--text-muted); font-size: 12px;">This action cannot be undone.</p>
+    `;
+    confirmModal.hidden = false;
+
+    const btnCancel = document.getElementById('btn-delete-cancel');
+    const btnConfirm = document.getElementById('btn-delete-confirm');
+
+    const cleanup = () => {
+        confirmModal.hidden = true;
+        btnCancel.onclick = null;
+        btnConfirm.onclick = null;
+    };
+
+    btnCancel.onclick = cleanup;
+    confirmModal.addEventListener('click', (e) => { if (e.target === confirmModal) cleanup(); }, { once: true });
+
+    btnConfirm.onclick = async () => {
+        cleanup();
+        await executeDelete([res]);
+    };
 }
 
 // ===== Delete Unused Resources =====
@@ -841,7 +875,7 @@ function handleDeleteUnused(target) {
     const unusedFiles = files.filter(f => !f.used);
 
     if (unusedFiles.length === 0) {
-        alert('Không có file unused nào trong thư mục này (sau khi filter).');
+        alert('No unused files found in this folder (after filters applied).');
         return;
     }
 
@@ -851,9 +885,9 @@ function handleDeleteUnused(target) {
     const confirmModal = document.getElementById('delete-confirm-modal');
     const confirmBody = document.getElementById('delete-confirm-body');
     confirmBody.innerHTML = `
-        <p>Bạn có chắc muốn xoá <strong style="color: var(--red)">${unusedFiles.length}</strong> file unused trong thư mục <strong>${escapeHtml(target.node.path)}</strong>?</p>
-        <p>Tổng dung lượng: <strong>${formatBytes(totalSize)}</strong></p>
-        <p style="color: var(--text-muted); font-size: 12px;">Hành động này không thể hoàn tác.</p>
+        <p>Delete <strong style="color: var(--red)">${unusedFiles.length}</strong> unused file${unusedFiles.length !== 1 ? 's' : ''} in <strong>${escapeHtml(target.node.path)}</strong>?</p>
+        <p>Total size: <strong>${formatBytes(totalSize)}</strong></p>
+        <p style="color: var(--text-muted); font-size: 12px;">This action cannot be undone.</p>
     `;
     confirmModal.hidden = false;
 
@@ -880,7 +914,7 @@ async function executeDelete(unusedFiles) {
     const result = await window.api.deleteFiles(absPaths);
 
     if (!result.success) {
-        alert('Lỗi khi xoá: ' + (result.message || 'Unknown error'));
+        alert('Delete failed: ' + (result.message || 'Unknown error'));
         return;
     }
 
@@ -893,15 +927,15 @@ async function executeDelete(unusedFiles) {
     const reportBody = document.getElementById('delete-report-body');
 
     let html = `<div class="report-summary">`;
-    html += `<div class="detail-row"><span class="detail-label">Đã xoá thành công</span><span class="detail-value green">${deleted.length} file</span></div>`;
+    html += `<div class="detail-row"><span class="detail-label">Deleted successfully</span><span class="detail-value green">${deleted.length} file${deleted.length !== 1 ? 's' : ''}</span></div>`;
     if (failed.length > 0) {
-        html += `<div class="detail-row"><span class="detail-label">Xoá thất bại</span><span class="detail-value red">${failed.length} file</span></div>`;
+        html += `<div class="detail-row"><span class="detail-label">Failed</span><span class="detail-value red">${failed.length} file${failed.length !== 1 ? 's' : ''}</span></div>`;
     }
-    html += `<div class="detail-row"><span class="detail-label">Tổng dung lượng đã giải phóng</span><span class="detail-value">${formatBytes(totalDeleted)}</span></div>`;
+    html += `<div class="detail-row"><span class="detail-label">Space freed</span><span class="detail-value">${formatBytes(totalDeleted)}</span></div>`;
     html += `</div>`;
 
     if (deleted.length > 0) {
-        html += `<div style="font-weight:600; margin-bottom:6px;">Danh sách file đã xoá:</div>`;
+        html += `<div style="font-weight:600; margin-bottom:6px;">Deleted files:</div>`;
         html += `<div class="report-file-list">`;
         for (const r of deleted) {
             const relPath = r.path.replace(/\\/g, '/');
@@ -912,7 +946,7 @@ async function executeDelete(unusedFiles) {
     }
 
     if (failed.length > 0) {
-        html += `<div style="font-weight:600; margin: 10px 0 6px; color: var(--red);">Xoá thất bại:</div>`;
+        html += `<div style="font-weight:600; margin: 10px 0 6px; color: var(--red);">Failed to delete:</div>`;
         html += `<div class="report-file-list">`;
         for (const r of failed) {
             const relPath = r.path.replace(/\\/g, '/');
