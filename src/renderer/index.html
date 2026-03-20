@@ -109,6 +109,46 @@
             </div>
         </div>
     </div>
+    <!-- Context Menu -->
+    <div id="tree-context-menu" class="context-menu" hidden>
+        <div class="context-menu-item" data-action="view-details">📋 Xem chi tiết</div>
+        <div class="context-menu-item danger" data-action="delete-unused">🗑️ Xoá unused resources</div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-confirm-modal" class="modal-overlay" hidden>
+        <div class="modal-box">
+            <div class="modal-header">⚠️ Xác nhận xoá</div>
+            <div class="modal-body" id="delete-confirm-body"></div>
+            <div class="modal-footer">
+                <button class="btn-modal btn-modal-cancel" id="btn-delete-cancel">Huỷ</button>
+                <button class="btn-modal btn-modal-danger" id="btn-delete-confirm">Xoá</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Report Modal -->
+    <div id="delete-report-modal" class="modal-overlay" hidden>
+        <div class="modal-box modal-box-large">
+            <div class="modal-header">📊 Báo cáo xoá resource</div>
+            <div class="modal-body" id="delete-report-body"></div>
+            <div class="modal-footer">
+                <button class="btn-modal btn-modal-primary" id="btn-report-close">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Details Modal -->
+    <div id="details-modal" class="modal-overlay" hidden>
+        <div class="modal-box">
+            <div class="modal-header">📋 Chi tiết</div>
+            <div class="modal-body" id="details-modal-body"></div>
+            <div class="modal-footer">
+                <button class="btn-modal btn-modal-primary" id="btn-details-close">Đóng</button>
+            </div>
+        </div>
+    </div>
+
     <script src="app.js"></script>
 </body>
 </html>

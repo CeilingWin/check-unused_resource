@@ -11,5 +11,6 @@ contextBridge.exposeInMainWorld('api', {
         return () => ipcRenderer.removeListener('scan-progress', listener);
     },
 
-    openCodeViewer: (filePath, highlightLine) => ipcRenderer.invoke('open-code-viewer', filePath, highlightLine)
+    openCodeViewer: (filePath, highlightLine) => ipcRenderer.invoke('open-code-viewer', filePath, highlightLine),
+    deleteFiles: (filePaths) => ipcRenderer.invoke('delete-files', filePaths)
 });

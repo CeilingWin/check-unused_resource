@@ -111,6 +111,25 @@ function registerIpcHandlers() {
         }
     });
 
+    // Delete files
+    ipcMain.handle('delete-files', async (_event, filePaths) => {
+        const results = [];
+        for (const filePath of filePaths) {
+            try {
+                if (!fs.existsSync(filePath)) {
+                    results.push({ path: filePath, success: false, error: 'File not found' });
+                    continue;
+                }
+                const stat = fs.statSync(filePath);
+                fs.unlinkSync(filePath);
+                results.push({ path: filePath, success: true, size: stat.size });
+            } catch (err) {
+                results.push({ path: filePath, success: false, error: err.message });
+            }
+        }
+        return { success: true, results };
+    });
+
     // Open code viewer window
     ipcMain.handle('open-code-viewer', async (_event, filePath, highlightLine) => {
         try {

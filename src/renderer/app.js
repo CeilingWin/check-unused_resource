@@ -305,6 +305,9 @@ function renderTreeNode(node, depth, isRoot) {
             icon.classList.toggle('expanded', isExpanded);
         });
 
+        // Context menu
+        row.addEventListener('contextmenu', (e) => showContextMenu(e, node, 'dir'));
+
     } else {
         // File
         const row = document.createElement('div');
@@ -352,6 +355,9 @@ function renderTreeNode(node, depth, isRoot) {
             row.classList.add('selected');
             selectFile(node.resource);
         });
+
+        // Context menu
+        row.addEventListener('contextmenu', (e) => showContextMenu(e, node, 'file'));
     }
 
     return container;
@@ -723,6 +729,219 @@ function initSettings() {
 function applyFontSize(fontSize, codeFontSize) {
     document.documentElement.style.setProperty('--font-size-base', fontSize + 'px');
     document.documentElement.style.setProperty('--code-font-size', codeFontSize + 'px');
+}
+
+// ===== Context Menu =====
+const contextMenu = document.getElementById('tree-context-menu');
+let contextMenuTarget = null; // { node, type: 'file'|'dir' }
+
+function showContextMenu(e, node, type) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    contextMenuTarget = { node, type };
+
+    // Show/hide delete option - only show for folders
+    const deleteItem = contextMenu.querySelector('[data-action="delete-unused"]');
+    deleteItem.style.display = type === 'dir' ? '' : 'none';
+
+    contextMenu.hidden = false;
+
+    // Position
+    const menuW = contextMenu.offsetWidth;
+    const menuH = contextMenu.offsetHeight;
+    let x = e.clientX;
+    let y = e.clientY;
+    if (x + menuW > window.innerWidth) x = window.innerWidth - menuW - 4;
+    if (y + menuH > window.innerHeight) y = window.innerHeight - menuH - 4;
+    contextMenu.style.left = x + 'px';
+    contextMenu.style.top = y + 'px';
+}
+
+function hideContextMenu() {
+    contextMenu.hidden = true;
+    contextMenuTarget = null;
+}
+
+document.addEventListener('click', hideContextMenu);
+document.addEventListener('contextmenu', (e) => {
+    if (!contextMenu.hidden && !contextMenu.contains(e.target)) hideContextMenu();
+});
+window.addEventListener('blur', hideContextMenu);
+
+contextMenu.querySelectorAll('.context-menu-item').forEach(item => {
+    item.addEventListener('click', () => {
+        const action = item.dataset.action;
+        const target = contextMenuTarget;
+        hideContextMenu();
+        if (!target) return;
+        if (action === 'view-details') handleViewDetails(target);
+        if (action === 'delete-unused') handleDeleteUnused(target);
+    });
+});
+
+// ===== View Details =====
+function collectNodeFiles(node) {
+    const files = [];
+    if (node.isDir) {
+        for (const child of node.children.values()) {
+            files.push(...collectNodeFiles(child));
+        }
+    } else {
+        files.push(node.resource);
+    }
+    return files;
+}
+
+function handleViewDetails(target) {
+    const modal = document.getElementById('details-modal');
+    const body = document.getElementById('details-modal-body');
+
+    if (target.type === 'file') {
+        const res = target.node.resource;
+        body.innerHTML = `
+            <div class="detail-row"><span class="detail-label">Tên file</span><span class="detail-value">${escapeHtml(res.path)}</span></div>
+            <div class="detail-row"><span class="detail-label">Dung lượng</span><span class="detail-value">${formatBytes(res.size)}</span></div>
+            <div class="detail-row"><span class="detail-label">Loại</span><span class="detail-value">${escapeHtml(res.type)}</span></div>
+            <div class="detail-row"><span class="detail-label">Trạng thái</span><span class="detail-value ${res.used ? 'green' : 'red'}">${res.used ? '✓ Đang dùng' : '✗ Không dùng'}</span></div>
+            ${res.used ? `<div class="detail-row"><span class="detail-label">Số references</span><span class="detail-value">${res.references.length}</span></div>` : ''}
+        `;
+    } else {
+        const files = collectNodeFiles(target.node);
+        const totalSize = files.reduce((sum, f) => sum + (f.size || 0), 0);
+        const usedFiles = files.filter(f => f.used);
+        const unusedFiles = files.filter(f => !f.used);
+
+        let html = `
+            <div class="detail-row"><span class="detail-label">Thư mục</span><span class="detail-value">${escapeHtml(target.node.path)}</span></div>
+            <div class="detail-row"><span class="detail-label">Số file</span><span class="detail-value">${files.length}</span></div>
+        `;
+
+        if (filterMode === 'all') {
+            html += `
+                <div class="detail-row"><span class="detail-label">Đang dùng</span><span class="detail-value green">${usedFiles.length}</span></div>
+                <div class="detail-row"><span class="detail-label">Không dùng</span><span class="detail-value red">${unusedFiles.length}</span></div>
+            `;
+        }
+
+        html += `<div class="detail-row"><span class="detail-label">Tổng dung lượng</span><span class="detail-value">${formatBytes(totalSize)}</span></div>`;
+        body.innerHTML = html;
+    }
+
+    modal.hidden = false;
+    document.getElementById('btn-details-close').onclick = () => { modal.hidden = true; };
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.hidden = true; }, { once: true });
+}
+
+// ===== Delete Unused Resources =====
+function handleDeleteUnused(target) {
+    if (target.type !== 'dir') return;
+
+    const files = collectNodeFiles(target.node);
+    const unusedFiles = files.filter(f => !f.used);
+
+    if (unusedFiles.length === 0) {
+        alert('Không có file unused nào trong thư mục này (sau khi filter).');
+        return;
+    }
+
+    const totalSize = unusedFiles.reduce((sum, f) => sum + (f.size || 0), 0);
+
+    // Show confirmation
+    const confirmModal = document.getElementById('delete-confirm-modal');
+    const confirmBody = document.getElementById('delete-confirm-body');
+    confirmBody.innerHTML = `
+        <p>Bạn có chắc muốn xoá <strong style="color: var(--red)">${unusedFiles.length}</strong> file unused trong thư mục <strong>${escapeHtml(target.node.path)}</strong>?</p>
+        <p>Tổng dung lượng: <strong>${formatBytes(totalSize)}</strong></p>
+        <p style="color: var(--text-muted); font-size: 12px;">Hành động này không thể hoàn tác.</p>
+    `;
+    confirmModal.hidden = false;
+
+    const btnCancel = document.getElementById('btn-delete-cancel');
+    const btnConfirm = document.getElementById('btn-delete-confirm');
+
+    const cleanup = () => {
+        confirmModal.hidden = true;
+        btnCancel.onclick = null;
+        btnConfirm.onclick = null;
+    };
+
+    btnCancel.onclick = cleanup;
+    confirmModal.addEventListener('click', (e) => { if (e.target === confirmModal) cleanup(); }, { once: true });
+
+    btnConfirm.onclick = async () => {
+        cleanup();
+        await executeDelete(unusedFiles);
+    };
+}
+
+async function executeDelete(unusedFiles) {
+    const absPaths = unusedFiles.map(f => f.absPath);
+    const result = await window.api.deleteFiles(absPaths);
+
+    if (!result.success) {
+        alert('Lỗi khi xoá: ' + (result.message || 'Unknown error'));
+        return;
+    }
+
+    // Build report
+    const deleted = result.results.filter(r => r.success);
+    const failed = result.results.filter(r => !r.success);
+    const totalDeleted = deleted.reduce((sum, r) => sum + (r.size || 0), 0);
+
+    const reportModal = document.getElementById('delete-report-modal');
+    const reportBody = document.getElementById('delete-report-body');
+
+    let html = `<div class="report-summary">`;
+    html += `<div class="detail-row"><span class="detail-label">Đã xoá thành công</span><span class="detail-value green">${deleted.length} file</span></div>`;
+    if (failed.length > 0) {
+        html += `<div class="detail-row"><span class="detail-label">Xoá thất bại</span><span class="detail-value red">${failed.length} file</span></div>`;
+    }
+    html += `<div class="detail-row"><span class="detail-label">Tổng dung lượng đã giải phóng</span><span class="detail-value">${formatBytes(totalDeleted)}</span></div>`;
+    html += `</div>`;
+
+    if (deleted.length > 0) {
+        html += `<div style="font-weight:600; margin-bottom:6px;">Danh sách file đã xoá:</div>`;
+        html += `<div class="report-file-list">`;
+        for (const r of deleted) {
+            const relPath = r.path.replace(/\\/g, '/');
+            const displayPath = relPath.split('/res/').pop() || relPath;
+            html += `<div class="report-file-item"><span class="report-file-path" title="${escapeHtml(relPath)}">res/${escapeHtml(displayPath)}</span><span class="report-file-size">${formatBytes(r.size)}</span></div>`;
+        }
+        html += `</div>`;
+    }
+
+    if (failed.length > 0) {
+        html += `<div style="font-weight:600; margin: 10px 0 6px; color: var(--red);">Xoá thất bại:</div>`;
+        html += `<div class="report-file-list">`;
+        for (const r of failed) {
+            const relPath = r.path.replace(/\\/g, '/');
+            html += `<div class="report-file-item"><span class="report-file-path">${escapeHtml(relPath)}</span><span class="report-file-size" style="color:var(--red)">${escapeHtml(r.error)}</span></div>`;
+        }
+        html += `</div>`;
+    }
+
+    reportBody.innerHTML = html;
+    reportModal.hidden = false;
+
+    document.getElementById('btn-report-close').onclick = () => { reportModal.hidden = true; };
+    reportModal.addEventListener('click', (e) => { if (e.target === reportModal) reportModal.hidden = true; }, { once: true });
+
+    // Remove deleted files from scanResult and re-render
+    const deletedPaths = new Set(deleted.map(r => r.path.replace(/\\/g, '/')));
+    scanResult.resourceList = scanResult.resourceList.filter(res => {
+        const absNorm = res.absPath.replace(/\\/g, '/');
+        return !deletedPaths.has(absNorm);
+    });
+
+    // Recalculate stats
+    const used = scanResult.resourceList.filter(r => r.used).length;
+    scanResult.stats.totalResources = scanResult.resourceList.length;
+    scanResult.stats.usedCount = used;
+    scanResult.stats.unusedCount = scanResult.resourceList.length - used;
+
+    updateStats();
+    renderTree();
 }
 
 // ===== Start =====
