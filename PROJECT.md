@@ -1,7 +1,7 @@
 # Cocos Resource Scanner — Project Architecture
 
 > **Auto-generated project documentation. AI must update this file after every code change.**
-> Last updated: 2026-03-20 (context menu + delete unused)
+> Last updated: 2026-03-20 (hidden menu bar + title bar overlay)
 
 ## Overview
 

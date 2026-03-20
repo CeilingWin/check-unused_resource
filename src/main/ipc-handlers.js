@@ -63,9 +63,9 @@ function registerIpcHandlers() {
                 const data = fs.readFileSync(filePath);
                 const mime = ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg'
                     : ext === '.png' ? 'image/png'
-                    : ext === '.gif' ? 'image/gif'
-                    : ext === '.webp' ? 'image/webp'
-                    : 'image/png';
+                        : ext === '.gif' ? 'image/gif'
+                            : ext === '.webp' ? 'image/webp'
+                                : 'image/png';
                 return {
                     success: true,
                     type: 'image',
@@ -155,6 +155,12 @@ function registerIpcHandlers() {
                 minHeight: 400,
                 backgroundColor: '#1e1e1e',
                 parent: parentWin || undefined,
+                titleBarStyle: 'hidden',
+                titleBarOverlay: {
+                    color: '#111536',
+                    symbolColor: '#9fa4c4',
+                    height: 36
+                },
                 webPreferences: {
                     preload: path.join(__dirname, '..', '..', 'preload-code-viewer.js'),
                     contextIsolation: true,

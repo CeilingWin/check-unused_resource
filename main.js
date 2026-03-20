@@ -10,7 +10,14 @@ function createWindow() {
         height: 900,
         minWidth: 1000,
         minHeight: 600,
-        backgroundColor: '#1e1e1e',
+        backgroundColor: '#0b0e1c',
+        autoHideMenuBar: true,
+        titleBarStyle: 'hidden',
+        titleBarOverlay: {
+            color: '#111536',
+            symbolColor: '#9fa4c4',
+            height: 36
+        },
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
             contextIsolation: true,
@@ -19,29 +26,11 @@ function createWindow() {
         icon: path.join(__dirname, 'assets', 'icons', 'icon.png'),
         title: 'Cocos Resource Scanner'
     });
+    mainWindow.setOpacity(0.93);
 
     mainWindow.loadFile(path.join(__dirname, 'src', 'renderer', 'index.html'));
 
-    const menu = Menu.buildFromTemplate([
-        {
-            label: 'File',
-            submenu: [
-                { role: 'quit' }
-            ]
-        },
-        {
-            label: 'View',
-            submenu: [
-                { role: 'reload' },
-                { role: 'toggleDevTools' },
-                { type: 'separator' },
-                { role: 'zoomIn' },
-                { role: 'zoomOut' },
-                { role: 'resetZoom' }
-            ]
-        }
-    ]);
-    Menu.setApplicationMenu(menu);
+    Menu.setApplicationMenu(null);
 }
 
 app.whenReady().then(() => {
