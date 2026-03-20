@@ -9,5 +9,7 @@ contextBridge.exposeInMainWorld('api', {
         const listener = (_event, data) => callback(data);
         ipcRenderer.on('scan-progress', listener);
         return () => ipcRenderer.removeListener('scan-progress', listener);
-    }
+    },
+
+    openCodeViewer: (filePath, highlightLine) => ipcRenderer.invoke('open-code-viewer', filePath, highlightLine)
 });

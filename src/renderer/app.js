@@ -474,18 +474,34 @@ function showReferences(resource) {
         }
 
         html += `
-            <div class="ref-item">
+            <div class="ref-item" data-file="${escapeHtml(ref.source)}" data-line="${ref.line || ''}" title="Click to view source file" style="cursor: pointer;">
                 <div class="ref-source">
                     <span class="ref-badge ${badge}">${badgeLabel}</span>
                     <span class="ref-file">${escapeHtml(ref.source)}</span>
                     ${ref.line ? `<span class="ref-line">:${ref.line}</span>` : ''}
-                    <button class="ref-copy-btn" title="Copy code" onclick="copyRefCode(this)">⧉</button>
+                    <button class="ref-copy-btn" title="Copy code" onclick="event.stopPropagation(); copyRefCode(this)">⧉</button>
                 </div>
                 <pre class="ref-code-block" tabindex="0">${codeBlockHtml}</pre>
             </div>
         `;
     }
     referenceContent.innerHTML = html;
+
+    // Add click handlers to open code viewer
+    referenceContent.querySelectorAll('.ref-item[data-file]').forEach(item => {
+        item.addEventListener('click', (e) => {
+            // Don't open viewer if user is selecting text in code block
+            const selection = window.getSelection();
+            if (selection && selection.toString().length > 0) return;
+
+            const sourceFile = item.getAttribute('data-file');
+            const line = parseInt(item.getAttribute('data-line')) || 0;
+            if (sourceFile && projectPath) {
+                const fullPath = projectPath + '/' + sourceFile;
+                window.api.openCodeViewer(fullPath, line);
+            }
+        });
+    });
 }
 
 /** Copy the code text from a reference block */

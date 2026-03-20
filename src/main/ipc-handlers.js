@@ -110,6 +110,56 @@ function registerIpcHandlers() {
             return { success: false, message: err.message };
         }
     });
+
+    // Open code viewer window
+    ipcMain.handle('open-code-viewer', async (_event, filePath, highlightLine) => {
+        try {
+            if (!fs.existsSync(filePath)) {
+                return { success: false, message: 'File not found' };
+            }
+
+            const maxSize = 2 * 1024 * 1024; // 2MB limit
+            const stat = fs.statSync(filePath);
+            if (stat.size > maxSize) {
+                return { success: false, message: 'File too large to display (' + formatBytes(stat.size) + ')' };
+            }
+
+            const content = fs.readFileSync(filePath, 'utf-8');
+            const totalLines = content.split('\n').length;
+            const fileName = path.basename(filePath);
+
+            const parentWin = BrowserWindow.getFocusedWindow();
+            const viewerWin = new BrowserWindow({
+                width: 900,
+                height: 700,
+                minWidth: 500,
+                minHeight: 400,
+                backgroundColor: '#1e1e1e',
+                parent: parentWin || undefined,
+                webPreferences: {
+                    preload: path.join(__dirname, '..', '..', 'preload-code-viewer.js'),
+                    contextIsolation: true,
+                    nodeIntegration: false
+                },
+                title: fileName + ' (Read Only)'
+            });
+
+            viewerWin.loadFile(path.join(__dirname, '..', 'renderer', 'code-viewer.html'));
+
+            viewerWin.webContents.on('did-finish-load', () => {
+                viewerWin.webContents.send('code-viewer-data', {
+                    filePath: filePath,
+                    content: content,
+                    highlightLine: highlightLine || null,
+                    totalLines: totalLines
+                });
+            });
+
+            return { success: true };
+        } catch (err) {
+            return { success: false, message: err.message };
+        }
+    });
 }
 
 function formatBytes(bytes) {

@@ -302,10 +302,11 @@ code {
     border-radius: var(--radius);
     margin-bottom: 6px;
     background: var(--bg-surface);
-    cursor: default;
+    cursor: pointer;
     transition: background var(--transition);
 }
 .ref-item:hover { background: var(--bg-hover); }
+.ref-item:active { background: var(--bg-active); }
 .ref-source {
     display: flex;
     align-items: center;
