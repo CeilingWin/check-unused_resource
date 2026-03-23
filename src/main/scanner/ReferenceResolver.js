@@ -72,9 +72,13 @@ function resolveReferences(projectRoot, onProgress, options) {
         allReferences.push(...refs);
     }
 
+    // Phase 5b: Extract search paths from addSearchPath() calls
+    progress({ phase: 'search-paths', message: 'Extracting search paths...', current: 0, total: 0 });
+    const searchPaths = extractSearchPaths(jsFiles);
+
     // Phase 6: Match references to resources
     progress({ phase: 'matching', message: 'Matching references...', current: 0, total: 0 });
-    const matched = matchReferences(allReferences, resources);
+    const matched = matchReferences(allReferences, resources, searchPaths);
 
     // Phase 6b: Resolve companion textures (.atlas → .png, .plist → .png)
     // If an atlas/plist is used, its texture PNGs are also used
@@ -126,6 +130,41 @@ function resolveReferences(projectRoot, onProgress, options) {
     }
 
     return { resourceList, stats };
+}
+
+/**
+ * Extract search paths from addSearchPath() calls in JS source files.
+ * Cocos2d uses jsb.fileUtils.addSearchPath("res/") to set lookup prefixes,
+ * allowing code to reference resources without the full path.
+ */
+function extractSearchPaths(jsFiles) {
+    const searchPaths = [];
+    const regex = /addSearchPath\s*\(\s*["']([^"']+)["']\s*\)/g;
+
+    for (const filePath of jsFiles) {
+        let content;
+        try {
+            content = fs.readFileSync(filePath, 'utf-8');
+        } catch { continue; }
+
+        let match;
+        while ((match = regex.exec(content)) !== null) {
+            let sp = match[1];
+            // Skip root "/" and empty — not useful for relative resource resolution
+            if (sp === '/' || sp === '') continue;
+            // Normalize backslashes and strip leading /
+            sp = sp.replace(/\\/g, '/');
+            if (sp.startsWith('/')) sp = sp.substring(1);
+            // Ensure trailing /
+            if (!sp.endsWith('/')) sp += '/';
+            if (!searchPaths.includes(sp)) {
+                searchPaths.push(sp);
+            }
+        }
+        regex.lastIndex = 0;
+    }
+
+    return searchPaths;
 }
 
 /**

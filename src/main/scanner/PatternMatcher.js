@@ -2,7 +2,8 @@ const path = require('path');
 
 /**
  * Match extracted references against actual resource files.
- * Handles exact paths, wildcard/glob patterns, and relative path resolution.
+ * Handles exact paths, wildcard/glob patterns, relative path resolution,
+ * and search path resolution (from Cocos addSearchPath).
  */
 
 /**
@@ -10,9 +11,10 @@ const path = require('path');
  * 
  * @param {Array} references - All collected references from parsers
  * @param {Map<string, object>} resources - Map of known resource paths → metadata
+ * @param {string[]} [searchPaths] - Search paths extracted from addSearchPath() calls
  * @returns {Map<string, Array>} Map of resourcePath → array of matching references
  */
-function matchReferences(references, resources) {
+function matchReferences(references, resources, searchPaths) {
     const matched = new Map();
 
     // Initialize all resources with empty arrays
@@ -28,19 +30,28 @@ function matchReferences(references, resources) {
         normalizedMap.set(normalizePath(p), p);
     }
 
+    // Normalize search paths (ensure trailing /)
+    const normalizedSearchPaths = (searchPaths || [])
+        .map(sp => {
+            let n = normalizePath(sp);
+            if (n && !n.endsWith('/')) n += '/';
+            return n;
+        })
+        .filter(sp => sp && sp !== '/');
+
     for (const ref of references) {
         const refPath = ref.resourcePath;
         if (!refPath) continue;
 
         if (ref.isPattern) {
             // Wildcard pattern matching (e.g., "res/Event/Bingo/MainGui/ProgressBingoPoint/gift*.png")
-            matchWildcard(refPath, ref, normalizedMap, matched);
+            matchWildcard(refPath, ref, normalizedMap, matched, normalizedSearchPaths);
         } else if (ref.isRelative) {
             // Relative path — try to find in any res/ subdirectory
             matchRelative(refPath, ref, normalizedMap, matched);
         } else {
             // Exact match
-            matchExact(refPath, ref, normalizedMap, matched);
+            matchExact(refPath, ref, normalizedMap, matched, normalizedSearchPaths);
         }
     }
 
@@ -50,7 +61,7 @@ function matchReferences(references, resources) {
 /**
  * Exact path matching with normalization.
  */
-function matchExact(refPath, ref, normalizedMap, matched) {
+function matchExact(refPath, ref, normalizedMap, matched, searchPaths) {
     const normalized = normalizePath(refPath);
 
     // Try direct match
@@ -76,6 +87,19 @@ function matchExact(refPath, ref, normalizedMap, matched) {
         const origWithoutRes = normalizedMap.get(withoutRes);
         if (origWithoutRes) {
             addMatch(matched, origWithoutRes, ref);
+            return;
+        }
+    }
+
+    // Try search paths (from addSearchPath calls)
+    if (searchPaths) {
+        for (const sp of searchPaths) {
+            const withSP = sp + normalized;
+            const origWithSP = normalizedMap.get(withSP);
+            if (origWithSP) {
+                addMatch(matched, origWithSP, ref);
+                return;
+            }
         }
     }
 }
@@ -84,18 +108,24 @@ function matchExact(refPath, ref, normalizedMap, matched) {
  * Wildcard pattern matching.
  * Pattern like "res/Event/Bingo/MainGui/ProgressBingoPoint/gift*.png"
  * matches "res/Event/Bingo/MainGui/ProgressBingoPoint/gift0.png", "gift1.png", etc.
+ * Also resolves via search paths (e.g., "common/bosodem/*.png" + search path "res/")
  */
-function matchWildcard(pattern, ref, normalizedMap, matched) {
+function matchWildcard(pattern, ref, normalizedMap, matched, searchPaths) {
     const normalizedPattern = normalizePath(pattern);
 
-    // Convert pattern to regex: * → [^/]*
-    const regexStr = escapeRegex(normalizedPattern).replace(/\\\*/g, '[^/]*');
-    const regex = new RegExp('^' + regexStr + '$', 'i');
-
-    // Also try with/without res/ prefix
+    // Build variants: original, with res/ prefix, and with each search path
     const variants = [normalizedPattern];
     if (!normalizedPattern.startsWith('res/')) {
         variants.push('res/' + normalizedPattern);
+    }
+    // Add search path variants
+    if (searchPaths) {
+        for (const sp of searchPaths) {
+            const withSP = sp + normalizedPattern;
+            if (!variants.includes(withSP)) {
+                variants.push(withSP);
+            }
+        }
     }
 
     for (const [normalized, original] of normalizedMap) {

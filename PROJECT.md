@@ -1,7 +1,7 @@
 # Cocos Resource Scanner — Project Architecture
 
 > **Auto-generated project documentation. AI must update this file after every code change.**
-> Last updated: 2026-03-20 (hidden menu bar + title bar overlay)
+> Last updated: 2026-03-23 (addSearchPath-based resource resolution)
 
 ## Overview
 
@@ -24,7 +24,7 @@ check-unused_resource/
 │   ├── main/
 │   │   ├── ipc-handlers.js            # All IPC channel handlers
 │   │   └── scanner/
-│   │       ├── ReferenceResolver.js   # 7-phase scan orchestrator
+│   │       ├── ReferenceResolver.js   # 8-phase scan orchestrator
 │   │       ├── ResourceScanner.js     # Resource file discovery + categorization
 │   │       ├── PatternMatcher.js      # Match references → resources
 │   │       └── parsers/
@@ -81,7 +81,7 @@ check-unused_resource/
 |---------|-----------|---------|-------------|
 | `select-folder` | renderer→main | — | Opens folder dialog, validates `res/`+`src/` |
 | | reply | `{success, path, reason, message}` | |
-| `scan-project` | renderer→main | `(folderPath, {filenameMatch})` | Runs 7-phase scan |
+| `scan-project` | renderer→main | `(folderPath, {filenameMatch})` | Runs 8-phase scan |
 | | reply | `{success, data: {resourceList, stats}}` | |
 | `scan-progress` | main→renderer | `{phase, message, current, total}` | Progress events during scan |
 | `get-preview` | renderer→main | `(filePath)` | Get file content for preview |
@@ -112,14 +112,15 @@ onFileData(callback)  // receives {filePath, content, highlightLine, totalLines}
 
 ---
 
-## Scanning Pipeline (7 Phases)
+## Scanning Pipeline (8 Phases)
 
 1. **Scan Resources** — Walk `res/`, detect file types, identify Cocos Studio JSONs
 2. **Collect JS Files** — Walk `src/`, gather all `.js` files
 3. **Parse Cocos JSONs** — Extract `FileData.Path`, `FileData.Plist`, `UsedResources`
 4. **Build Constant Map** — Extract `ROOT_PATH = "res/..."` definitions, resolve chains
-5. **Parse JS Files** — 4 detection patterns: direct paths, constant concat, API calls, variable suffix
-6. **Match References** — Exact match, wildcard expansion, relative path suffix matching + companion textures (atlas→png, plist→png) + optional filename matching
+5. **Parse JS Files** — 5 detection patterns: direct paths, constant concat, API calls (incl. initWithFile/setTexture/addImage), variable suffix, relative path concatenation (`"path/" + var + ".ext"`)
+5b. **Extract Search Paths** — Detect `addSearchPath()` calls in JS source (e.g., `res/`, `res/common/`, `res/Board/`)
+6. **Match References** — Exact match, wildcard expansion, relative path suffix matching, **search path resolution** + companion textures (atlas→png, plist→png) + optional filename matching
 7. **Build Results** — Generate `{resourceList, stats}` with used/unused status
 
 ---

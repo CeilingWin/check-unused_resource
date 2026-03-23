@@ -96,6 +96,9 @@ function parseJsFile(filePath, projectRoot, constMap) {
 
         // Pattern 4: Variable + extension suffix (e.g., pathVar + ".json")
         extractVarSuffixPaths(line, lineNum, sourceRel, varPathMap, references, lines, i);
+
+        // Pattern 5: Relative path concatenation: "path/" + var + ".ext" (for addSearchPath resolution)
+        extractRelativeConcatPaths(line, lineNum, sourceRel, references, lines, i);
     }
 
     return references;
@@ -355,6 +358,9 @@ function extractRelativeApiPaths(line, lineNum, source, references, lines, lineI
         /cc\.audioEngine\.play(?:Effect|Music)\s*\(\s*["']([^"']+\.(mp3|ogg|wav))["']/gi,
         /sp\.SkeletonAnimation\s*\(\s*["']([^"']+\.(json|skel))["']/gi,
         /createSkeleton\s*\(\s*["']([^"']+\.(json|skel))["']/gi,
+        /\.initWithFile\s*\(\s*["']([^"']+\.(png|jpg|jpeg))["']/gi,
+        /\.setTexture\s*\(\s*["']([^"']+\.(png|jpg|jpeg))["']/gi,
+        /\.addImage\s*\(\s*["']([^"']+\.(png|jpg|jpeg))["']/gi,
     ];
 
     for (const regex of apiPatterns) {
@@ -378,6 +384,39 @@ function extractRelativeApiPaths(line, lineNum, source, references, lines, lineI
                 isRelative: true
             });
         }
+    }
+}
+
+/**
+ * Pattern 5: Relative path concatenation — "path/" + variable + ".ext"
+ * Catches: .initWithFile("common/bosodem/" + timeNow + ".png")
+ * Produces wildcard: common/bosodem/*.png (isRelative + isPattern)
+ */
+function extractRelativeConcatPaths(line, lineNum, source, references, lines, lineIdx) {
+    // Match: "path/" + var + ".ext" where the string prefix contains a /
+    const regex = /["']([^"']*\/[^"']*?)["']\s*\+\s*\w+\s*\+\s*["'](\.[a-zA-Z0-9]+)["']/g;
+    let match;
+    while ((match = regex.exec(line)) !== null) {
+        const pathPrefix = match[1];
+        const ext = match[2];
+
+        // Skip if already starts with res/ (handled by other patterns)
+        if (/^res[\/\\]/i.test(pathPrefix)) continue;
+
+        // Only consider resource extensions
+        if (!RESOURCE_EXTS.test('x' + ext)) continue;
+
+        const pattern = pathPrefix + '*' + ext;
+        references.push({
+            resourcePath: pattern,
+            source,
+            line: lineNum,
+            snippet: line.trim(),
+            context: buildContextSnippet(lines, lineIdx),
+            type: 'js',
+            isPattern: true,
+            isRelative: true
+        });
     }
 }
 
