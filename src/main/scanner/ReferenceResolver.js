@@ -248,6 +248,13 @@ function resolveByFilename(matched, jsFiles, projectRoot, progress) {
 
     if (basenameToRes.size === 0) return 0;
 
+    // Build regex map: basename must be bounded by non-alphanumeric chars or string edges
+    const basenameRegexMap = new Map();
+    for (const basename of basenameToRes.keys()) {
+        const escaped = basename.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        basenameRegexMap.set(basename, new RegExp('(?:^|[^a-zA-Z0-9])' + escaped + '(?:$|[^a-zA-Z0-9])'));
+    }
+
     let totalMatched = 0;
 
     for (let i = 0; i < jsFiles.length; i++) {
@@ -279,8 +286,9 @@ function resolveByFilename(matched, jsFiles, projectRoot, progress) {
         const lines = content.split('\n');
 
         for (const [basename, resPaths] of basenameToRes) {
-            // Check if this basename appears in any string literal
-            const foundInStr = strings.find(s => s.includes(basename));
+            // Check if this basename appears as a standalone token in any string literal
+            const bnRegex = basenameRegexMap.get(basename);
+            const foundInStr = strings.find(s => bnRegex.test(s));
             if (!foundInStr) continue;
 
             // Find line number in original content
@@ -293,7 +301,7 @@ function resolveByFilename(matched, jsFiles, projectRoot, progress) {
                     let lm;
                     while ((lm = lineStrRegex.exec(lines[li])) !== null) {
                         const strContent = lm[1] !== undefined ? lm[1] : lm[2];
-                        if (strContent.includes(searchStr)) {
+                        if (bnRegex.test(strContent)) {
                             lineIdx = li;
                             break;
                         }

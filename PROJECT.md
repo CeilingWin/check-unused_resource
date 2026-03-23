@@ -1,7 +1,7 @@
 # Cocos Resource Scanner — Project Architecture
 
 > **Auto-generated project documentation. AI must update this file after every code change.**
-> Last updated: 2026-03-23 (addSearchPath-based resource resolution)
+> Last updated: 2026-03-23 (filename-match word-boundary fix)
 
 ## Overview
 
@@ -120,7 +120,7 @@ onFileData(callback)  // receives {filePath, content, highlightLine, totalLines}
 4. **Build Constant Map** — Extract `ROOT_PATH = "res/..."` definitions, resolve chains
 5. **Parse JS Files** — 5 detection patterns: direct paths, constant concat, API calls (incl. initWithFile/setTexture/addImage), variable suffix, relative path concatenation (`"path/" + var + ".ext"`)
 5b. **Extract Search Paths** — Detect `addSearchPath()` calls in JS source (e.g., `res/`, `res/common/`, `res/Board/`)
-6. **Match References** — Exact match, wildcard expansion, relative path suffix matching, **search path resolution** + companion textures (atlas→png, plist→png) + optional filename matching
+6. **Match References** — Exact match, wildcard expansion, relative path suffix matching, **search path resolution** + companion textures (atlas→png, plist→png) + optional filename matching (word-boundary aware: basename must be bounded by non-alphanumeric chars or string edges)
 7. **Build Results** — Generate `{resourceList, stats}` with used/unused status
 
 ---
