@@ -17,6 +17,7 @@
     "files": [
       "main.js",
       "preload.js",
+      "preload-code-viewer.js",
       "src/**/*",
       "assets/**/*"
     ]

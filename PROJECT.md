@@ -1,7 +1,7 @@
 # Cocos Resource Scanner — Project Architecture
 
 > **Auto-generated project documentation. AI must update this file after every code change.**
-> Last updated: 2026-03-23 (filename-match word-boundary fix)
+> Last updated: 2026-03-25 (fix preload-code-viewer.js missing from build files)
 
 ## Overview
 
