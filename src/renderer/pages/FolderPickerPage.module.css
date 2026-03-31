@@ -9,7 +9,7 @@
   overflow: hidden;
   -webkit-app-region: drag;
 }
-.page button, .page a {
+.page button, .page a, .page div {
   -webkit-app-region: no-drag;
 }
 
