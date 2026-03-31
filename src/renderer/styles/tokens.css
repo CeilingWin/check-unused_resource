@@ -1,0 +1,81 @@
+:root {
+  /* ZPS Brand Core */
+  --zps-brand-red: #E8341A;
+  --zps-brand-orange: #F5A623;
+  --zps-brand-gradient: linear-gradient(135deg, #E8341A 0%, #F5A623 100%);
+
+  /* Background System */
+  --bg-primary: #13151F;
+  --bg-secondary: #1A1C2B;
+  --bg-surface: #252836;
+  --bg-hover: #2E3148;
+  --bg-active: #363A52;
+  --bg-elevated: #2E3148;
+
+  /* Text */
+  --text-primary: #FFFFFF;
+  --text-secondary: #8A8FA8;
+  --text-muted: #5A5F7A;
+
+  /* Accent Colors */
+  --accent: #F5A623;
+  --accent-hover: #FFBA42;
+  --accent-dim: rgba(245, 166, 35, 0.15);
+  --accent-green: #00D68F;
+  --accent-purple: #7C4DFF;
+  --accent-blue: #4A90D9;
+  --green: #00D68F;
+  --green-hover: #00C280;
+  --red: #E8341A;
+  --orange: #F5A623;
+
+  /* Semantic */
+  --success: #00D68F;
+  --warning: #F5A623;
+  --danger: #E8341A;
+
+  /* Border */
+  --border: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(255, 255, 255, 0.14);
+
+  /* Shape */
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-pill: 9999px;
+
+  /* Typography */
+  --font: 'Inter', 'Be Vietnam Pro', 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+  --font-mono: 'Cascadia Code', 'Fira Code', Consolas, monospace;
+  --font-size-base: 13px;
+  --code-font-size: 11px;
+
+  /* Shadows */
+  --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.3);
+  --shadow-popup: 0 8px 32px rgba(0, 0, 0, 0.45);
+  --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.4);
+
+  /* Chromatic surfaces */
+  --surface-red: linear-gradient(135deg, rgba(232, 52, 26, 0.12), rgba(232, 52, 26, 0.03));
+  --surface-green: linear-gradient(135deg, rgba(0, 214, 143, 0.12), rgba(0, 214, 143, 0.03));
+  --surface-orange: linear-gradient(135deg, rgba(245, 166, 35, 0.12), rgba(245, 166, 35, 0.03));
+
+  /* Transition */
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-snap: cubic-bezier(0, 0, 0.2, 1);
+  --transition: 200ms var(--ease-smooth);
+  --transition-fast: 100ms var(--ease-snap);
+  --transition-bounce: 300ms var(--ease-bounce);
+
+  /* Gradient card */
+  --gradient-card: linear-gradient(135deg, #252836 0%, #1A1C2B 100%);
+
+  /* Syntax highlighting */
+  --syn-str: #ce9178;
+  --syn-kw: #569cd6;
+  --syn-num: #b5cea8;
+  --syn-ns: #4ec9b0;
+  --syn-cmt: #6a9955;
+}
