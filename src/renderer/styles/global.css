@@ -1,0 +1,49 @@
+@import './tokens.css';
+
+/* Reset */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+html, body, #root {
+  height: 100%;
+  font-family: var(--font);
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  overflow: hidden;
+  user-select: none;
+  line-height: 1.5;
+}
+
+code {
+  font-family: var(--font-mono);
+  background: var(--bg-surface);
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  border: 1px solid var(--border);
+  color: var(--accent);
+}
+
+/* Syntax highlighting tokens (global — used in dangerouslySetInnerHTML) */
+.syn-str { color: var(--syn-str); }
+.syn-kw { color: var(--syn-kw); }
+.syn-num { color: var(--syn-num); }
+.syn-ns { color: var(--syn-ns); }
+.syn-cmt { color: var(--syn-cmt); font-style: italic; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-pill);
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+::-webkit-scrollbar-corner { background: transparent; }

@@ -1,0 +1,101 @@
+.item {
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  margin-bottom: 8px;
+  background: var(--bg-surface);
+  cursor: pointer;
+  transition: all var(--transition);
+  border: 1px solid transparent;
+}
+.item:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+.source {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.badgeJson { background: rgba(0, 214, 143, 0.15); color: #00D68F; }
+.badgeJs { background: rgba(245, 166, 35, 0.15); color: #F5A623; }
+.badgePlist { background: rgba(124, 77, 255, 0.15); color: #7C4DFF; }
+.badgeAtlas { background: rgba(74, 144, 217, 0.15); color: #4A90D9; }
+.badgeFname { background: rgba(232, 52, 26, 0.15); color: #E8341A; }
+.file {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-base);
+  color: var(--accent);
+}
+.line {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-base);
+  color: var(--text-muted);
+}
+.copyBtn {
+  margin-left: auto;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: 6px;
+  line-height: 1;
+  transition: all var(--transition);
+}
+.copyBtn:hover { color: var(--text-primary); border-color: var(--text-secondary); background: var(--bg-hover); }
+.copiedBtn { color: var(--success); border-color: var(--success); }
+.codeBlock {
+  font-family: var(--font-mono);
+  font-size: var(--code-font-size);
+  line-height: 1.6;
+  margin: 6px 0 0 0;
+  padding: 8px 0;
+  background: var(--bg-primary);
+  border-radius: var(--radius-sm);
+  overflow-x: auto;
+  user-select: text;
+  -webkit-user-select: text;
+  border: 1px solid var(--border);
+}
+.codeLine {
+  display: flex;
+  padding: 0 10px 0 0;
+  white-space: pre;
+}
+.codeLineHighlight {
+  background: rgba(245, 166, 35, 0.1);
+  border-left: 2px solid var(--accent);
+}
+.codeLineGap {
+  color: var(--text-muted);
+  font-style: italic;
+  justify-content: center;
+  padding: 0;
+  font-size: 10px;
+}
+.codeLinenum {
+  display: inline-block;
+  min-width: 40px;
+  text-align: right;
+  padding-right: 12px;
+  color: var(--text-muted);
+  user-select: none;
+  flex-shrink: 0;
+  opacity: 0.5;
+}
+.codeText {
+  flex: 1;
+  color: #d4d4d4;
+}

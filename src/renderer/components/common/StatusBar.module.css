@@ -1,0 +1,18 @@
+.statusbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3px 16px;
+  background: linear-gradient(90deg, #1A1C2B 0%, #252836 100%);
+  color: var(--text-secondary);
+  font-size: 12px;
+  height: 28px;
+  flex-shrink: 0;
+  border-top: 1px solid var(--border);
+}
+
+.stats {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent);
+}
