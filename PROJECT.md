@@ -1,7 +1,7 @@
 # Cocos Resource Scanner — Project Architecture
 
 > **Auto-generated project documentation. AI must update this file after every code change.**
-> Last updated: 2026-03-25 (fix preload-code-viewer.js missing from build files)
+> Last updated: 2026-03-31 (add README.md user documentation)
 
 ## Overview
 
@@ -19,6 +19,7 @@ check-unused_resource/
 ├── preload.js                         # Preload for main window (window.api)
 ├── preload-code-viewer.js             # Preload for code viewer (window.codeViewerAPI)
 ├── package.json                       # App manifest (electron-builder)
+├── README.md                          # User documentation & usage guide
 │
 ├── src/
 │   ├── main/
