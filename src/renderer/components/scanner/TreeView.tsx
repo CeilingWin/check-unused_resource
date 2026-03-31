@@ -44,13 +44,17 @@ interface TreeViewProps {
 }
 
 export function TreeView({ onContextMenu }: TreeViewProps) {
-  const state = useScannerStore();
+  const scanResult = useScannerStore(s => s.scanResult);
+  const filterMode = useScannerStore(s => s.filterMode);
+  const fileTypeFilter = useScannerStore(s => s.fileTypeFilter);
+  const searchQuery = useScannerStore(s => s.searchQuery);
   const selectedFile = useScannerStore(s => s.selectedFile);
   const selectFile = useScannerStore(s => s.selectFile);
 
-  const filteredResources = useMemo(() => getFilteredResources(state), [
-    state.scanResult, state.filterMode, state.fileTypeFilter, state.searchQuery
-  ]);
+  const filteredResources = useMemo(
+    () => getFilteredResources({ scanResult, filterMode, fileTypeFilter, searchQuery } as Parameters<typeof getFilteredResources>[0]),
+    [scanResult, filterMode, fileTypeFilter, searchQuery]
+  );
 
   const tree = useMemo(() => buildTreeData(filteredResources), [filteredResources]);
 

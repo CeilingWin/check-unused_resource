@@ -45,7 +45,7 @@ interface TreeRowProps {
   onContextMenu: (e: React.MouseEvent, node: TreeNode, type: 'file' | 'dir') => void;
 }
 
-export function TreeRowComponent({ node, depth, isRoot, selectedPath, onSelect, onContextMenu }: TreeRowProps) {
+const TreeRowComponent = React.memo(function TreeRowInner({ node, depth, isRoot, selectedPath, onSelect, onContextMenu }: TreeRowProps) {
   const [expanded, setExpanded] = React.useState(!!isRoot);
 
   if (node.isDir) {
@@ -115,4 +115,6 @@ export function TreeRowComponent({ node, depth, isRoot, selectedPath, onSelect, 
       </div>
     </div>
   );
-}
+});
+
+export { TreeRowComponent };
