@@ -4,7 +4,7 @@
   "description": "Toolbox for Cocos2d-JS game projects",
   "main": "src/main/main.js",
   "scripts": {
-    "dev": "concurrently -n renderer,viewer,electron \"npm run dev:renderer\" \"npm run dev:code-viewer\" \"npm run dev:electron\"",
+    "dev": "npm run dev:renderer & npm run dev:code-viewer & wait-on http://localhost:5173 http://localhost:5174 && electron .",
     "dev:renderer": "vite --config vite.config.ts",
     "dev:code-viewer": "vite --config vite.code-viewer.config.ts --port 5174",
     "dev:electron": "wait-on http://localhost:5173 http://localhost:5174 && electron .",
@@ -18,7 +18,6 @@
     "@types/react": "^18.3.20",
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.7.0",
-    "concurrently": "^9.2.1",
     "electron": "^28.0.0",
     "electron-builder": "^24.0.0",
     "typescript": "^5.8.3",
