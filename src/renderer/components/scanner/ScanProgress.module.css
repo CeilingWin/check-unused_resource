@@ -1,0 +1,35 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(19, 21, 31, 0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  flex-direction: column;
+  gap: 20px;
+}
+.spinner {
+  width: 44px; height: 44px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.text { color: var(--text-secondary); font-size: 14px; font-weight: 500; }
+.barWrap {
+  width: 320px; height: 4px;
+  background: var(--bg-hover);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+.bar {
+  height: 100%;
+  background: var(--zps-brand-gradient);
+  transition: width 200ms ease;
+  border-radius: var(--radius-pill);
+  box-shadow: 0 0 12px rgba(232, 52, 26, 0.3);
+}
