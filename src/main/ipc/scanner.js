@@ -1,4 +1,4 @@
-const { ipcMain, BrowserWindow } = require('electron');
+const { ipcMain, BrowserWindow, app } = require('electron');
 const fs = require('fs');
 const path = require('path');
 const { resolveReferences } = require('../scanner/ReferenceResolver');
@@ -40,6 +40,7 @@ function registerScannerHandlers(mainWindow) {
           : ext === '.png' ? 'image/png'
           : ext === '.gif' ? 'image/gif'
           : ext === '.webp' ? 'image/webp'
+          : ext === '.bmp' ? 'image/bmp'
           : 'image/png';
         return {
           success: true,
@@ -118,7 +119,6 @@ function registerScannerHandlers(mainWindow) {
       const totalLines = content.split('\n').length;
       const fileName = path.basename(filePath);
 
-      const { app } = require('electron');
       const isDev = !app.isPackaged;
 
       const viewerWin = new BrowserWindow({
