@@ -1,0 +1,8 @@
+.panel { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+.header { padding: 8px 12px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); background: var(--bg-tertiary); flex-wrap: wrap; }
+.badge { font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 8px; border-radius: var(--radius-sm); letter-spacing: 0.5px; }
+.badgeExact { background: rgba(76, 175, 80, 0.15); color: #4caf50; }
+.badgePerceptual { background: rgba(245, 166, 35, 0.15); color: #f5a623; }
+.meta { font-size: 11px; color: var(--text-secondary); }
+.body { flex: 1; overflow-y: auto; }
+.empty { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); font-size: 13px; }
