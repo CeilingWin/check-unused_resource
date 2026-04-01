@@ -25,14 +25,17 @@ export function HomePage() {
         left={
           <>
             <span style={{ fontWeight: 600, fontSize: '14px' }}>Cocos Toolbox</span>
-            <span style={{ color: 'var(--text-muted)', fontSize: '12px', fontFamily: 'var(--font-mono)', marginLeft: '8px', maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <span className={styles.projectPath}>
               {projectPath}
             </span>
           </>
         }
         right={
-          <button className={styles.changeFolderBtn} onClick={closeProject}>
-            Change Folder
+          <button className={styles.closeProjectBtn} onClick={closeProject} title="Close project">
+            <svg viewBox="0 0 16 16" fill="none" width="13" height="13">
+              <path d="M2 8h8M7 5l3 3-3 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Close Project
           </button>
         }
       />

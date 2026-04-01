@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { PageName, RecentFolder, AppSettings } from '../types';
+import { useScannerStore } from './useScannerStore';
 
 interface AppState {
   currentPage: PageName;
@@ -29,6 +30,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   navigateTo: (page) => set({ currentPage: page }),
 
   openProject: async (folderPath) => {
+    useScannerStore.getState().reset();
     const name = folderPath.split(/[\\/]/).pop() || folderPath;
     await window.api.addRecentFolder({ path: folderPath, name });
     const folders = await window.api.getRecentFolders();
