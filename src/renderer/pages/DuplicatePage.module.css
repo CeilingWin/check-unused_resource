@@ -55,18 +55,91 @@
   gap: 16px;
 }
 
+.scanCard {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 420px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px 32px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+}
+
+.scanCardTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.startScanHint {
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.thresholdRow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.thresholdLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.thresholdControl {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.thresholdSlider {
+  flex: 1;
+  accent-color: var(--accent);
+  height: 4px;
+  cursor: pointer;
+}
+
+.thresholdValue {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--accent);
+  min-width: 20px;
+  text-align: right;
+}
+
+.thresholdHint {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
 .startScanBtn {
   background: var(--zps-brand-gradient);
   color: #fff;
   border: none;
-  padding: 14px 40px;
+  padding: 12px 0;
   border-radius: var(--radius-pill);
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   cursor: pointer;
   transition: all var(--transition);
   box-shadow: 0 4px 16px rgba(232, 52, 26, 0.3);
   letter-spacing: 0.3px;
+  width: 100%;
+  margin-top: 4px;
 }
 .startScanBtn:hover {
   transform: translateY(-2px);
@@ -75,9 +148,4 @@
 }
 .startScanBtn:active {
   transform: scale(0.97);
-}
-
-.startScanHint {
-  color: var(--text-muted);
-  font-size: 13px;
 }

@@ -35,7 +35,7 @@ export function DuplicateSettingsPopup({ onClose }: Props) {
           Lower values = fewer matches, higher precision. Higher values = more matches, may include false positives. Re-scan required after changing.
         </div>
         <div className={styles.footer}>
-          <button className={styles.resetBtn} onClick={() => setThreshold(5)}>Reset to default (5)</button>
+          <button className={styles.resetBtn} onClick={() => setThreshold(3)}>Reset to default (3)</button>
         </div>
       </div>
     </div>

@@ -133,8 +133,32 @@ export function DuplicatePage() {
 
       {!scanResult && !isScanning ? (
         <div className={styles.startScanWrap}>
-          <button className={styles.startScanBtn} onClick={handleScan}>Start Duplicate Scan</button>
-          <span className={styles.startScanHint}>Scan for duplicate files using content hashing and image similarity</span>
+          <div className={styles.scanCard}>
+            <div className={styles.scanCardTitle}>🗂️ Duplicate Resource Scanner</div>
+            <p className={styles.startScanHint}>Detect exact duplicate files and visually similar images using content hashing and perceptual similarity.</p>
+            <div className={styles.thresholdRow}>
+              <label className={styles.thresholdLabel} htmlFor="dup-threshold">
+                Similarity threshold
+              </label>
+              <div className={styles.thresholdControl}>
+                <input
+                  id="dup-threshold"
+                  type="range"
+                  min={0}
+                  max={10}
+                  step={1}
+                  value={threshold}
+                  onChange={e => useDuplicateStore.getState().setThreshold(Number(e.target.value))}
+                  className={styles.thresholdSlider}
+                />
+                <span className={styles.thresholdValue}>{threshold}</span>
+              </div>
+              <span className={styles.thresholdHint}>
+                {threshold === 0 ? 'Exact images only' : threshold <= 3 ? 'Strict — nearly identical images' : threshold <= 6 ? 'Moderate — visually similar images' : 'Loose — broadly similar images'}
+              </span>
+            </div>
+            <button className={styles.startScanBtn} onClick={handleScan}>Start Scan</button>
+          </div>
         </div>
       ) : (
         <div className={styles.content}>

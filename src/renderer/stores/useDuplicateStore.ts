@@ -74,7 +74,7 @@ export const useDuplicateStore = create<DuplicateState>((set) => ({
     fileTypeFilter: 'all',
     matchTypeFilter: 'all',
     searchQuery: '',
-    threshold: 5,
+    threshold: 3,
   }),
 }));
 
