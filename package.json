@@ -37,8 +37,14 @@
       "src/main/**/*",
       "dist/**/*",
       "assets/**/*",
-      "node_modules/sharp/**/*"
+      "node_modules/sharp/**/*",
+      "node_modules/@img/**/*"
     ],
+    "asarUnpack": [
+      "node_modules/sharp/**/*",
+      "node_modules/@img/**/*"
+    ],
+    "npmRebuild": false,
     "extraMetadata": {
       "main": "src/main/main.js"
     }
