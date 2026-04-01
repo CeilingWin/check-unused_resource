@@ -141,7 +141,7 @@ function registerScannerHandlers(mainWindow) {
       });
       viewerWin.setOpacity(0.97);
 
-      viewerWin.loadFile(path.join(__dirname, '..', '..', 'dist', 'code-viewer', 'index.html'));
+      viewerWin.loadFile(path.join(__dirname, '..', '..', '..', 'dist', 'code-viewer', 'index.html'));
 
       viewerWin.webContents.on('did-finish-load', () => {
         viewerWin.webContents.send('code-viewer-data', {

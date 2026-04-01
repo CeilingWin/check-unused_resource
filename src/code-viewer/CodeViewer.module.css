@@ -16,12 +16,17 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html, body, #root {
+:global(html), :global(body), :global(#root) {
   height: 100%;
   font-family: var(--font);
   color: var(--text-primary);
   background: var(--bg-primary);
   overflow: hidden;
+}
+
+:global(#root) {
+  display: flex;
+  flex-direction: column;
 }
 
 /* Syntax highlighting tokens (global — used in dangerouslySetInnerHTML) */
@@ -52,7 +57,7 @@ html, body, #root {
 }
 
 .codeContainer {
-  flex: 1; overflow: auto; height: calc(100% - 40px);
+  flex: 1; overflow: auto; min-height: 0;
 }
 
 .codeContent {

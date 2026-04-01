@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useLayoutEffect, useState, useRef } from 'react';
 import styles from './CodeViewer.module.css';
 
 const TOKEN_RE = /(\/\/.*$)|("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|\b(var|let|const|function|return|if|else|for|while|new|this|class|extends|import|export|from|true|false|null|undefined|typeof|instanceof)\b|\b(cc|sp|ccs)\b|\b(\d+(?:\.\d+)?)\b/gm;
@@ -39,11 +39,9 @@ export function CodeViewer() {
     });
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (fileData?.highlightLine && highlightRef.current) {
-      requestAnimationFrame(() => {
-        highlightRef.current?.scrollIntoView({ block: 'center' });
-      });
+      highlightRef.current.scrollIntoView({ block: 'center', behavior: 'instant' });
     }
   }, [fileData]);
 
