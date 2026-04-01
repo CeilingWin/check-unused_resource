@@ -111,6 +111,7 @@ declare global {
       saveSettings: (settings: AppSettings) => Promise<{ success: boolean }>;
       scanProject: (path: string, options: { filenameMatch: boolean }) => Promise<{ success: boolean; data?: ScanResult; message?: string }>;
       getPreview: (filePath: string) => Promise<{ success: boolean; type?: string; data?: string; size?: number; fileName?: string; message?: string }>;
+      showItemInFolder: (filePath: string) => Promise<{ success: boolean }>;
       openCodeViewer: (filePath: string, highlightLine: number) => Promise<{ success: boolean; message?: string }>;
       deleteFiles: (filePaths: string[]) => Promise<{ success: boolean; results: DeleteResult[]; message?: string }>;
       onScanProgress: (callback: (data: { message?: string; current?: number; total?: number }) => void) => () => void;

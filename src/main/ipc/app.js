@@ -1,4 +1,4 @@
-const { ipcMain, dialog, BrowserWindow } = require('electron');
+const { ipcMain, dialog, BrowserWindow, shell } = require('electron');
 const fs = require('fs');
 const path = require('path');
 const store = require('../store');
@@ -60,6 +60,11 @@ function registerAppHandlers() {
 
   ipcMain.handle('save-settings', (_event, settings) => {
     store.set('settings', settings);
+    return { success: true };
+  });
+
+  ipcMain.handle('show-item-in-folder', (_event, filePath) => {
+    shell.showItemInFolder(filePath);
     return { success: true };
   });
 }

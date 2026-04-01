@@ -35,16 +35,33 @@ export function ImageCompareGrid({ files }: Props) {
         const preview = previews.get(file.path);
         return (
           <div key={file.path} className={`${styles.item} ${isSmallest ? styles.itemSmallest : ''}`}>
+            {isSmallest && <div className={styles.smallestBadge}>Smallest</div>}
             <div className={styles.imageWrap}>
-              {preview ? <img src={preview} alt={file.path} className={styles.image} /> : <div className={styles.placeholder}>Loading...</div>}
+              {preview
+                ? <img src={preview} alt={file.path} className={styles.image} />
+                : <div className={styles.placeholder}>Loading...</div>
+              }
             </div>
             <div className={styles.info}>
-              <div className={styles.fileName}>{file.path.split('/').pop()}</div>
-              {file.width != null && file.height != null && <div className={styles.dimensions}>{file.width} x {file.height}</div>}
+              <div className={styles.fileName} title={file.path}>{file.path.split('/').pop()}</div>
+              {file.width != null && file.height != null && (
+                <div className={styles.dimensions}>{file.width} × {file.height}px</div>
+              )}
               <div className={styles.fileSize}>{formatBytes(file.size)}</div>
-              <div className={styles.filePath}>{file.path}</div>
+              <div className={styles.filePath} title={file.absPath}>{file.path}</div>
             </div>
-            {isSmallest && <div className={styles.smallestBadge}>Smallest</div>}
+            <button
+              className={styles.revealBtn}
+              title="Show in File Explorer"
+              onClick={() => window.api.showItemInFolder(file.absPath)}
+            >
+              <svg viewBox="0 0 16 16" fill="none" width="13" height="13">
+                <rect x="1" y="4" width="14" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.4"/>
+                <path d="M1 7h14" stroke="currentColor" strokeWidth="1.4"/>
+                <path d="M1 6.5l3-2.5h3l1 2.5" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/>
+              </svg>
+              Show in Explorer
+            </button>
           </div>
         );
       })}

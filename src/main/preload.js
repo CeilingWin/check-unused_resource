@@ -20,6 +20,9 @@ contextBridge.exposeInMainWorld('api', {
     return () => ipcRenderer.removeListener('scan-progress', listener);
   },
 
+  // File system
+  showItemInFolder: (filePath) => ipcRenderer.invoke('show-item-in-folder', filePath),
+
   // Duplicate scanner
   scanDuplicates: (folderPath, options) => ipcRenderer.invoke('duplicate:start-scan', folderPath, options),
   onDuplicateScanProgress: (callback) => {
