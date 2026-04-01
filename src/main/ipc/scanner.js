@@ -1,4 +1,4 @@
-const { ipcMain, BrowserWindow, app } = require('electron');
+const { ipcMain, BrowserWindow } = require('electron');
 const fs = require('fs');
 const path = require('path');
 const { resolveReferences } = require('../scanner/ReferenceResolver');
@@ -119,8 +119,6 @@ function registerScannerHandlers(mainWindow) {
       const totalLines = content.split('\n').length;
       const fileName = path.basename(filePath);
 
-      const isDev = !app.isPackaged;
-
       const viewerWin = new BrowserWindow({
         width: 900,
         height: 700,
@@ -143,11 +141,7 @@ function registerScannerHandlers(mainWindow) {
       });
       viewerWin.setOpacity(0.97);
 
-      if (isDev) {
-        viewerWin.loadURL('http://localhost:5174');
-      } else {
-        viewerWin.loadFile(path.join(__dirname, '..', '..', 'dist', 'code-viewer', 'index.html'));
-      }
+      viewerWin.loadFile(path.join(__dirname, '..', '..', 'dist', 'code-viewer', 'index.html'));
 
       viewerWin.webContents.on('did-finish-load', () => {
         viewerWin.webContents.send('code-viewer-data', {

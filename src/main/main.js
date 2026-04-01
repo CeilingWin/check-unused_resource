@@ -4,8 +4,6 @@ const { registerAllHandlers } = require('./ipc');
 
 let mainWindow;
 
-const isDev = !app.isPackaged;
-
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1400,
@@ -30,11 +28,7 @@ function createWindow() {
   });
   mainWindow.setOpacity(0.97);
 
-  if (isDev) {
-    mainWindow.loadURL('http://localhost:5173');
-  } else {
-    mainWindow.loadFile(path.join(__dirname, '..', '..', 'dist', 'renderer', 'index.html'));
-  }
+  mainWindow.loadFile(path.join(__dirname, '..', '..', 'dist', 'renderer', 'index.html'));
 
   Menu.setApplicationMenu(null);
 }
