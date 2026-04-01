@@ -3,6 +3,7 @@ import { useAppStore } from './stores/useAppStore';
 import { FolderPickerPage } from './pages/FolderPickerPage';
 import { HomePage } from './pages/HomePage';
 import { ScannerPage } from './pages/ScannerPage';
+import { DuplicatePage } from './pages/DuplicatePage';
 
 export function App() {
   const currentPage = useAppStore(s => s.currentPage);
@@ -19,6 +20,8 @@ export function App() {
       return <HomePage />;
     case 'scanner':
       return <ScannerPage />;
+    case 'duplicate':
+      return <DuplicatePage />;
     default:
       return <FolderPickerPage />;
   }

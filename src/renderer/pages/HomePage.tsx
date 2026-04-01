@@ -11,7 +11,13 @@ const TOOLS = [
     name: 'Scan Unused Resources',
     desc: 'Find and clean up unused resources in your project',
   },
-  // Future tools go here
+  {
+    id: 'duplicate' as const,
+    icon: '\uD83D\uDDC2\uFE0F',
+    iconBg: 'var(--surface-blue, #2a4a7f)',
+    name: 'Scan Duplicate Resources',
+    desc: 'Detect duplicate files using content hashing and image similarity',
+  },
 ];
 
 export function HomePage() {

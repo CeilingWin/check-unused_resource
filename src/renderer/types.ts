@@ -60,7 +60,44 @@ export interface DeleteResult {
   error?: string;
 }
 
-export type PageName = 'folder-picker' | 'home' | 'scanner';
+export type PageName = 'folder-picker' | 'home' | 'scanner' | 'duplicate';
+
+// Duplicate scan types
+export interface DuplicateFile {
+  path: string;
+  absPath: string;
+  size: number;
+  width: number | null;
+  height: number | null;
+  hash: string;
+  pHash: string | null;
+}
+
+export interface DuplicateGroup {
+  id: number;
+  matchType: 'exact' | 'perceptual';
+  fileType: 'image' | 'non-image';
+  similarity: number;
+  hammingDistance: number;
+  files: DuplicateFile[];
+  wastedBytes: number;
+}
+
+export interface DuplicateScanStats {
+  totalFiles: number;
+  totalGroups: number;
+  exactGroups: number;
+  perceptualGroups: number;
+  totalWastedBytes: number;
+  imageFiles: number;
+  nonImageFiles: number;
+}
+
+export interface DuplicateScanResult {
+  groups: DuplicateGroup[];
+  stats: DuplicateScanStats;
+  settings: { threshold: number };
+}
 
 // Window API type declarations
 declare global {
@@ -77,6 +114,8 @@ declare global {
       openCodeViewer: (filePath: string, highlightLine: number) => Promise<{ success: boolean; message?: string }>;
       deleteFiles: (filePaths: string[]) => Promise<{ success: boolean; results: DeleteResult[]; message?: string }>;
       onScanProgress: (callback: (data: { message?: string; current?: number; total?: number }) => void) => () => void;
+      scanDuplicates: (path: string, options: { threshold: number }) => Promise<{ success: boolean; data?: DuplicateScanResult; message?: string }>;
+      onDuplicateScanProgress: (callback: (data: { phase?: number; step?: string; message?: string; current?: number; total?: number }) => void) => () => void;
     };
     codeViewerAPI: {
       onFileData: (callback: (data: { filePath: string; content: string; highlightLine: number | null; totalLines: number }) => void) => void;

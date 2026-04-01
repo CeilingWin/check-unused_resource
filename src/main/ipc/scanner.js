@@ -2,6 +2,7 @@ const { ipcMain, BrowserWindow } = require('electron');
 const fs = require('fs');
 const path = require('path');
 const { resolveReferences } = require('../scanner/ReferenceResolver');
+const { scanDuplicates } = require('../scanner/DuplicateScanner');
 
 function formatBytes(bytes) {
   if (bytes === 0) return '0 B';
@@ -153,6 +154,19 @@ function registerScannerHandlers(mainWindow) {
       });
 
       return { success: true };
+    } catch (err) {
+      return { success: false, message: err.message };
+    }
+  });
+
+  ipcMain.handle('duplicate:start-scan', async (_event, folderPath, options) => {
+    try {
+      const result = await scanDuplicates(folderPath, (progress) => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('duplicate:scan-progress', progress);
+        }
+      }, options);
+      return { success: true, data: result };
     } catch (err) {
       return { success: false, message: err.message };
     }

@@ -19,4 +19,12 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.on('scan-progress', listener);
     return () => ipcRenderer.removeListener('scan-progress', listener);
   },
+
+  // Duplicate scanner
+  scanDuplicates: (folderPath, options) => ipcRenderer.invoke('duplicate:start-scan', folderPath, options),
+  onDuplicateScanProgress: (callback) => {
+    const listener = (_event, data) => callback(data);
+    ipcRenderer.on('duplicate:scan-progress', listener);
+    return () => ipcRenderer.removeListener('duplicate:scan-progress', listener);
+  },
 });
